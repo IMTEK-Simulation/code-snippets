@@ -36,7 +36,7 @@ def progressbar(x, maxx, len=60):
 
 ###
 
-def irfftn(karr, rarr):
+def irfftn(karr):
     k = 0
     ndim = len(karr.shape)
     nk = np.sum([np.prod(karr.shape)//i for i in karr.shape])
@@ -47,10 +47,10 @@ def irfftn(karr, rarr):
             sys.stdout.write('{}\r'.format(progressbar(k, nk-1)))
             sys.stdout.flush()
             sl = c[:dim] + (slice(None),) + c[dim:]
-            if dim == ndim-1:
-                rarr[sl] = np.fft.irfft(karr[sl], n=rarr.shape[dim])
-            else:
-                karr[sl] = np.fft.ifft(karr[sl])
+            #if dim == ndim-1:
+            #    karr[sl] = np.fft.irfft(karr[sl], n=rarr.shape[dim])
+            #else:
+            karr[sl] = np.fft.ifft(karr[sl])
             k += 1
 
 ###
@@ -108,12 +108,10 @@ def Fourier_synthesis(nb_grid_pts, physical_sizes, Hurst, rms_amplitude=None, rm
                                 long_cutoff=long_cutoff)
 
     ndim = len(nb_grid_pts)
-    knlast = nb_grid_pts[-1]//2+1
-    nb_fourier_pts = np.append(nb_grid_pts[:-1], [knlast])
+    #knlast = nb_grid_pts[-1]//2+1
+    nb_fourier_pts = nb_grid_pts #np.append(nb_grid_pts[:-1], [knlast])
 
     # Memory mapped arrays
-    rarr = np.memmap(rfn, np.float64, 'w+', shape=tuple(nb_grid_pts))
-
     karr = np.memmap(kfn, np.complex128, 'w+', shape=tuple(nb_fourier_pts))
 
     print('Creating Fourier representation:')
@@ -135,18 +133,12 @@ def Fourier_synthesis(nb_grid_pts, physical_sizes, Hurst, rms_amplitude=None, rm
             karr[coord][q_sq < q_long**2] = rolloff * ran[mask] * q_long**(-(ndim+2*Hurst)/2)
         k += 1
 
-    #if nx % 2 == 0:
-    #    karr[0, 0] = np.real(karr[0, 0])
-    #    karr[1:nx//2, 0] = karr[-1:nx//2:-1, 0].conj()
-    #else:
-    #    karr[0, 0] = np.real(karr[0, 0])
-    #    karr[nx//2, 0] = np.real(karr[nx//2, 0])
-    #    karr[1:nx//2, 0] = karr[-1:nx//2+1:-1, 0].conj()
+    karr[(0,)*ndim] = 0 #np.real(karr[(0,)*ndim])
 
     print('\nInverse FFT:')
-    irfftn(karr, rarr)
+    irfftn(karr)
     print()
-    return rarr, karr
+    return np.real(karr)
 
 ###
 
@@ -209,14 +201,14 @@ if __name__ == '__main__':
     print('size = {}'.format(arguments.size))
     print('unit = {}'.format(arguments.unit))
 
-    field, fieldq = Fourier_synthesis(arguments.nb_grid_pts,
-                                      arguments.size,
-                                      arguments.Hurst,
-                                      rms_amplitude=arguments.rms_amplitude,
-                                      rms_derivative=arguments.rms_derivative,
-                                      short_cutoff=arguments.short_cutoff,
-                                      long_cutoff=arguments.long_cutoff,
-                                      rolloff=arguments.rolloff)
+    field = Fourier_synthesis(arguments.nb_grid_pts,
+                              arguments.size,
+                              arguments.Hurst,
+                              rms_amplitude=arguments.rms_amplitude,
+                              rms_derivative=arguments.rms_derivative,
+                              short_cutoff=arguments.short_cutoff,
+                              long_cutoff=arguments.long_cutoff,
+                              rolloff=arguments.rolloff)
     field -= np.mean(field)
 
     print('Field creation done. Measured properties:')
