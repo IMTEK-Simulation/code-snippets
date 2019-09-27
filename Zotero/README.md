@@ -1,7 +1,7 @@
 # Zotero-related snippets
 
 * better-bibtex:
-  (Better BibTex)[http://retorque.re/zotero-better-bibtex/](BBT) facilitates 
+  (Better BibTex)[http://retorque.re/zotero-better-bibtex/] (BBT) facilitates 
   BibTex export from Zotero. Customize export by inserting JavaScript snippets
   at "Edit->Preferences->Better BibTex->Advanced->postscript" within Zotero
   after installation of BBT.
