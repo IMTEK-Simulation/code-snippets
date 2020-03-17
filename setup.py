@@ -24,7 +24,8 @@ if __name__ == "__main__":
         author_email='johannes.hoermann@imtek.uni-freiburg.de',
         license='MIT',
         packages=find_packages(),
-        package_data={'': ['ChangeLog.md']},
+        # package_data={'': ['ChangeLog.md']},
+        include_package_data=True,
         python_requires='>3.6.8',
         zip_safe=False,
         install_requires=[
@@ -51,18 +52,18 @@ if __name__ == "__main__":
             ],
         },
         scripts=[
-            'LAMMPS_data/merge.py', # requires Pizza.py (Python 2.7)
-            'LAMMPS_data/extract_thermo.sh',
-            'NetCDF/ncjoin.py', # requires NetCDF4
+            'imteksimcs/LAMMPS_data/merge.py', # requires Pizza.py (Python 2.7)
+            'imteksimcs/LAMMPS_thermo/extract_thermo.sh',
+            'imteksimcs/NetCDF/ncjoin.py', # requires NetCDF4
         ],
         entry_points={
             'console_scripts': [
-                'extend_ndx_by_per_atom_groups = GROMACS.extend_ndx_by_per_atom_groups:main [GMX]',
-                'join_thermo = LAMMPS_thermo.join_thermo:main',
-                'ncfilter = NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
-                'netcdf2data = NetCDF.netcdf2data [Ovito]',
-                'strip_comments = LAMMPS_data.strip_comments:main',
-                'to_hybrid = LAMMPS_data.to_hybrid:main',
+                'extend_ndx_by_per_atom_groups = imteksimcs.GROMACS.extend_ndx_by_per_atom_groups:main [GMX]',
+                'join_thermo = imteksimcs.LAMMPS_thermo.join_thermo:main',
+                'ncfilter = imteksimcs.NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
+                'netcdf2data = imteksimcs.NetCDF.netcdf2data:main [Ovito]',
+                'strip_comments = imteksimcs.LAMMPS_data.strip_comments:main',
+                'to_hybrid = imteksimcs.LAMMPS_data.to_hybrid:main',
             ],
         },
     )

@@ -1,3 +1,3 @@
+include imteksimcs/LAMMPS_thermo/extract_thermo.sh
 include versioneer.py
-include _version.py
 include imteksimcs/_version.py
