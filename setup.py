@@ -26,7 +26,7 @@ if __name__ == "__main__":
         packages=find_packages(),
         # package_data={'': ['ChangeLog.md']},
         include_package_data=True,
-        python_requires='>3.6.8',
+        python_requires='>=3.6.8',
         zip_safe=False,
         install_requires=[
             'numpy>=1.16.2',
