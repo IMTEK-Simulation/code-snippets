@@ -1,0 +1,210 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// Sort by atom id 
+//
+// Original version included in NCO User Guide at http://nco.sf.net/nco.html#sort
+//
+// Modified for LAMMPS NetCDF trajectory.
+//
+// 2019, Johannes Hörmann, johannes.hoermann@imtek.uni-freiburg.de 
+//
+///////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////
+// allocate intermediate variables //
+//////////////////////////////////////
+
+// Store input variables in RAM 
+// before overwriting them with output initialization
+*var_id=id(0,:);
+*var_type='type'(0,:);
+
+*var_coordinates=coordinates(0,:,:);
+*var_forces=forces(0,:,:);
+*var_f_storeAnteFreezeForces=f_storeAnteFreezeForces(0,:,:);
+*var_f_storeAnteFreezeForcesAve=f_storeAnteFreezeForcesAve(0,:,:);
+*var_f_storeAnteShakeForces=f_storeAnteShakeForces(0,:,:);
+*var_f_storeAnteShakeForcesAve=f_storeAnteShakeForcesAve(0,:,:);
+*var_f_storeAnteStatForces=f_storeAnteStatForces(0,:,:);
+*var_f_storeAnteStatForcesAve=f_storeAnteStatForcesAve(0,:,:);
+*var_f_storeForcesAve=f_storeForcesAve(0,:,:);
+*var_f_storeUnconstrainedForces=f_storeUnconstrainedForces(0,:,:);
+*var_f_storeUnconstrainedForcesAve=f_storeUnconstrainedForcesAve(0,:,:);
+
+*in_id=id;
+*in_type='type';
+
+*in_coordinates=coordinates;
+*in_forces=forces;
+*in_f_storeAnteFreezeForces=f_storeAnteFreezeForces;
+*in_f_storeAnteFreezeForcesAve=f_storeAnteFreezeForcesAve;
+*in_f_storeAnteShakeForces=f_storeAnteShakeForces;
+*in_f_storeAnteShakeForcesAve=f_storeAnteShakeForcesAve;
+*in_f_storeAnteStatForces=f_storeAnteStatForces;
+*in_f_storeAnteStatForcesAve=f_storeAnteStatForcesAve;
+*in_f_storeForcesAve=f_storeForcesAve;
+*in_f_storeUnconstrainedForces=f_storeUnconstrainedForces;
+*in_f_storeUnconstrainedForcesAve=f_storeUnconstrainedForcesAve;
+
+//*in_id=id.permute($atom,$frame);
+//*in_coordinates=coordinates.permute($atom,$frame,$spatial);
+//*in_forces=forces.permute($atom,$frame,$spatial);
+//*in_f_storeAnteFreezeForces=f_storeAnteFreezeForces.permute($atom,$frame,$spatial);
+//*in_f_storeAnteFreezeForcesAve=f_storeAnteFreezeForcesAve.permute($atom,$frame,$spatial);
+//*in_f_storeAnteShakeForces=f_storeAnteShakeForces.permute($atom,$frame,$spatial);
+//*in_f_storeAnteShakeForcesAve=f_storeAnteShakeForcesAve.permute($atom,$frame,$spatial);
+//*in_f_storeAnteStatForces=f_storeAnteStatForces.permute($atom,$frame,$spatial);
+//*in_f_storeAnteStatForcesAve=f_storeAnteStatForcesAve.permute($atom,$frame,$spatial);
+//*in_f_storeForcesAve=f_storeForcesAve.permute($atom,$frame,$spatial);
+//*in_f_storeUnconstrainedForces=f_storeUnconstrainedForces.permute($atom,$frame,$spatial);
+//*in_f_storeUnconstrainedForcesAve=f_storeUnconstrainedForcesAve.permute($atom,$frame,$spatial);
+
+////////////////////////
+// allocate sort maps //
+////////////////////////
+
+// allocate mask and sort map of desired size
+
+// simple sort map along atom dimension
+*id_srt_map=0*var_id;
+// sort map along frame, atom and spatial dimension
+*id_srt_map_3d=0*int(var_coordinates);
+*spatial_idx=array(0,1,$spatial);
+
+// var_id=sort(var_id,&id_srt_map);
+// sort map along frame and atom dimension
+//*id_srt_map_2d=0*id;
+
+//*frame_idx=array(0,1,$frame);
+//*frame_spatial_idx[$frame,$spatial]=frame_idx+spatial_idx;
+
+//*id_srt_map_2d+=frame_idx
+//*id_srt_map_3d+=frame_spatial_idx
+
+//print("sort map 2d =\n");print(srt_map_2d);
+//print("sort map 3d =\n");print(srt_map_3d);
+
+///////////////////////////////
+// allocate output variables //
+///////////////////////////////
+
+time=time;
+time@scale_factor=time@scale_factor;
+
+// initialize output
+// number literal samples from http://nco.sourceforge.net/nco.html#Number-literals:
+
+// var[$rlev]=0.1;     // Variable will be type @code{NC_DOUBLE}
+// var[$lon_grd]=2.0;  // Variable will be type @code{NC_DOUBLE}
+// var[$gds_crd]=2e3;  // Variable will be type @code{NC_DOUBLE}
+// var[$gds_crd]=2.0f; // Variable will be type @code{NC_FLOAT} (note "f")
+// var[$gds_crd]=2e3f; // Variable will be type @code{NC_FLOAT} (note "f")
+// var[$gds_crd]=2;    // Variable will be type @code{NC_INT}
+// var[$gds_crd]=-3;   // Variable will be type @code{NC_INT}
+// var[$gds_crd]=2s;   // Variable will be type @code{NC_SHORT}
+// var[$gds_crd]=-3s;  // Variable will be type @code{NC_SHORT}
+// var@att=41.;        // Attribute will be type @code{NC_DOUBLE}
+// var@att=41.f;       // Attribute will be type @code{NC_FLOAT}
+// var@att=41;         // Attribute will be type @code{NC_INT}
+// var@att=-21s;       // Attribute will be type @code{NC_SHORT}  
+// var@units="kelvin"; // Attribute will be type @code{NC_CHAR}
+
+*id[$frame,$atom]=0;
+*type[$frame,$atom]=0;
+*coordinates[$frame,$atom,$spatial]=0.f;
+*forces[$frame,$atom,$spatial]=0.f;
+*f_storeAnteFreezeForces[$frame,$atom,$spatial]=0.f;
+*f_storeAnteFreezeForcesAve[$frame,$atom,$spatial]=0.f;
+*f_storeAnteShakeForces[$frame,$atom,$spatial]=0.f;
+*f_storeAnteShakeForcesAve[$frame,$atom,$spatial]=0.f;
+*f_storeAnteStatForces[$frame,$atom,$spatial]=0.f;
+*f_storeAnteStatForcesAve[$frame,$atom,$spatial]=0.f;
+*f_storeForcesAve[$frame,$atom,$spatial]=0.f;
+*f_storeUnconstrainedForces[$frame,$atom,$spatial]=0.f;
+*f_storeUnconstrainedForcesAve[$frame,$atom,$spatial]=0.f;
+
+/////////////////////////////
+// iterate over all frames //
+/////////////////////////////
+
+*sz_idx=$frame.size;
+
+for(*idx=0; idx<sz_idx;idx++) {
+  var_id=in_id(idx,:);
+  var_type=in_type(idx,:);
+
+  var_coordinates=in_coordinates(idx,:,:);
+  var_forces=in_forces(idx,:,:);
+  var_f_storeAnteFreezeForces=in_f_storeAnteFreezeForces(idx,:,:);
+  var_f_storeAnteFreezeForcesAve=in_f_storeAnteFreezeForcesAve(idx,:,:);
+  var_f_storeAnteShakeForces=in_f_storeAnteShakeForces(idx,:,:);
+  var_f_storeAnteShakeForcesAve=in_f_storeAnteShakeForcesAve(idx,:,:);
+  var_f_storeAnteStatForces=in_f_storeAnteStatForces(idx,:,:);
+  var_f_storeAnteStatForcesAve=in_f_storeAnteStatForcesAve(idx,:,:);
+  var_f_storeForcesAve=in_f_storeForcesAve(idx,:,:);
+  var_f_storeUnconstrainedForces=in_f_storeUnconstrainedForces(idx,:,:);
+  var_f_storeUnconstrainedForcesAve=in_f_storeUnconstrainedForcesAve(idx,:,:);
+
+  /////////////////////
+  // sort by atom id //
+  /////////////////////
+
+  id_srt_map=0*var_id;
+  id(idx,:)=sort(var_id,&id_srt_map);
+
+  // (frame, atom, spatial) dimensions
+  id_srt_map_3d=(0*int(var_coordinates))+id_srt_map;
+  id_srt_map_3d*=$spatial.size;
+  id_srt_map_3d+=spatial_idx;
+
+  'type'(idx,:)=remap(var_type,id_srt_map);
+
+  coordinates(idx,:,:)=remap(var_coordinates,id_srt_map_3d);
+  f_storeAnteFreezeForces(idx,:,:)=remap(var_f_storeAnteFreezeForces,id_srt_map_3d);
+  f_storeAnteFreezeForcesAve(idx,:,:)=remap(var_f_storeAnteFreezeForcesAve,id_srt_map_3d);
+  f_storeAnteShakeForces(idx,:,:)=remap(var_f_storeAnteShakeForces,id_srt_map_3d);
+  f_storeAnteShakeForcesAve(idx,:,:)=remap(var_f_storeAnteShakeForcesAve,id_srt_map_3d);
+  f_storeAnteStatForces(idx,:,:)=remap(var_f_storeAnteStatForces,id_srt_map_3d);
+  f_storeAnteStatForcesAve(idx,:,:)=remap(var_f_storeAnteStatForcesAve,id_srt_map_3d);
+  f_storeForcesAve(idx,:,:)=remap(var_f_storeForcesAve,id_srt_map_3d);
+  f_storeUnconstrainedForces(idx,:,:)=remap(var_f_storeUnconstrainedForces,id_srt_map_3d);
+  f_storeUnconstrainedForcesAve(idx,:,:)=remap(var_f_storeUnconstrainedForcesAve,id_srt_map_3d);
+  forces(idx,:,:)=remap(var_forces,id_srt_map_3d);
+
+  print(".");
+}
+// delete temporary variables
+var_id.ram_delete();
+var_type.ram_delete();
+
+var_coordinates.ram_delete();
+var_forces.ram_delete();
+var_f_storeAnteFreezeForces.ram_delete();
+var_f_storeAnteFreezeForcesAve.ram_delete();
+var_f_storeAnteShakeForces.ram_delete();
+var_f_storeAnteShakeForcesAve.ram_delete();
+var_f_storeAnteStatForces.ram_delete();
+var_f_storeAnteStatForcesAve.ram_delete();
+var_f_storeForcesAve.ram_delete();
+var_f_storeUnconstrainedForces.ram_delete();
+var_f_storeUnconstrainedForcesAve.ram_delete();
+
+id_srt_map.ram_delete();
+id_srt_map_3d.ram_delete();
+
+spatial_idx.ram_delete();
+
+// write results
+id.ram_write();
+'type'.ram_write();
+coordinates.ram_write();
+forces.ram_write();
+f_storeAnteFreezeForces.ram_write();
+f_storeAnteFreezeForcesAve.ram_write();
+f_storeAnteShakeForces.ram_write();
+f_storeAnteShakeForcesAve.ram_write();
+f_storeAnteStatForces.ram_write();
+f_storeAnteStatForcesAve.ram_write();
+f_storeForcesAve.ram_write();
+f_storeUnconstrainedForces.ram_write();
+f_storeUnconstrainedForcesAve.ram_write();

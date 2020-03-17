@@ -1,0 +1,30 @@
+// forcesMinMax.nco
+//
+// Johannes Hörmann, June 2019, johannes.hoermann@imtek.uni-freiburg.de
+//
+// extacts maximum and minimum forces at each frame as well as
+// the according atom indices and ids 
+//
+// execute with
+//  ncap2 -v -O -S forcesMinMax.nco default.nc forcesMinMax.nc
+//
+defdim("ind",2);
+
+max_indices[$frame,$ind]=0L;
+min_indices[$frame,$ind]=0L;
+max_id[$frame]=0L;
+min_id[$frame]=0L;
+max_val[$frame]=0.0;
+min_val[$frame]=0.0;
+
+*idx=0;
+*sz=$frame.size;
+
+for(*idx=0; idx<sz;idx++) {
+ max_indices(idx,:)=max_index(forces(idx,:,:));
+ max_val(idx)=max(forces(idx,:,:));
+ max_id(idx)=id(idx,max_index(forces(idx,:,:)));
+ min_indices(idx,:)=min_index(forces(idx,:,:));
+ min_val(idx)=min(forces(idx,:,:));
+ min_id(idx)=id(idx,min_index(forces(idx,:,:)));
+}
