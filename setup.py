@@ -46,10 +46,23 @@ if __name__ == "__main__":
             "Ovito": [
                 "ovito", # not sure how to specify dependency on Ovito
             ],
+            "Pizza.py": [
+                "Pizza.py", # same as for Ovito
+            ],
         },
+        scripts=[
+            'LAMMPS_data/merge.py', # requires Pizza.py (Python 2.7)
+            'LAMMPS_data/extract_thermo.sh',
+            'NetCDF/ncjoin.py', # requires NetCDF4
+        ],
         entry_points={
             'console_scripts': [
-                'extend_ndx_by_per_atom_groups = GROMACS-data.extend_ndx_by_per_atom_groups:main [GMX]',
+                'extend_ndx_by_per_atom_groups = GROMACS.extend_ndx_by_per_atom_groups:main [GMX]',
+                'join_thermo = LAMMPS_thermo.join_thermo:main',
+                'ncfilter = NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
+                'netcdf2data = NetCDF.netcdf2data [Ovito]',
+                'strip_comments = LAMMPS_data.strip_comments:main',
+                'to_hybrid = LAMMPS_data.to_hybrid:main',
             ],
         },
     )
