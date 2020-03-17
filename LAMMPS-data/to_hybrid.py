@@ -4,7 +4,6 @@ Converts LAMMPS pair_coeff lines to 'pair_style hybrid' format.
 """
 # 29 Mar 2019, converts LAMMPS force field pair_coeff entries to hybrid style
 
-import logging
 def main():
     import argparse
 

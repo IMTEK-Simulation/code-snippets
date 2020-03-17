@@ -64,7 +64,6 @@ def joinThermo(file1, file2, outfile=None, index_col=0, hashed_header=False,
         Default: 0 (first column)
     """
   import pandas as pd
-  import numpy as np
   logger = logging.getLogger('join_thermo.joinThermo')
   logger.info("Reading files '{:s}' and '{:s}'".format(file1,file2))
 
@@ -113,7 +112,6 @@ def joinThermo(file1, file2, outfile=None, index_col=0, hashed_header=False,
         for header_line in original_header:
           f.write(header_line)
       joint.to_csv(f, sep=' ', header=write_header_via_pandas, index=True, float_format='%g')
-    #np.savetxt(outfile, joint, fmt='{:')
 
   return joint
 

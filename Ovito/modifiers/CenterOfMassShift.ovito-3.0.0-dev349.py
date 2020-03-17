@@ -33,7 +33,6 @@ Use after two CenterOfMass modifiers at different positions in pipeline.
 """
 
 from ovito.data import *
-import numpy as np
 
 def modify(frame, input, output):
     shift_attribute_names = ["comShift.X","comShift.Y","comShift.Z"]
