@@ -1,0 +1,41 @@
+[\s\S]*
+Loop time of (?P<looptime>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) on (?P<nprocs>[-+]?\d+) procs for (?P<nsteps>[-+]?\d+) steps with (?P<natoms>[-+]?\d+) atoms
+[\s\S]*
+Performance: (?P<time_unit_per_day>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) (?P<time_unit>[\S]+)\/day, ((?P<hours_per_time_unit>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) hours\/(?P=time_unit), )?(?P<timesteps_per_second>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) timesteps\/s
+(?P<cpu_use>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)% CPU use with (?P<mpi_tasks>[-+]?\d+) MPI tasks x (?P<omp_threads>[-+]?\d+) OpenMP threads
+[\s\S]*
+MPI task timing breakdown:
+Section \|  min time  \|  avg time  \|  max time  \|%varavg\| %total
+-+
+(?:Pair[^|]+(?:\|\s*(?P<share_pair>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Bond[^|]+(?:\|\s*(?P<share_bond>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Kspace[^|]+(?:\|\s*(?P<share_kspace>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Neigh[^|]+(?:\|\s*(?P<share_neigh>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Comm[^|]+(?:\|\s*(?P<share_comm>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Output[^|]+(?:\|\s*(?P<share_output>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Modify[^|]+(?:\|\s*(?P<share_modify>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)\s*)+
+)?(?:Other[^|]+(?:\|\s*(?P<share_other>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)?\s*)+)?
+[\s\S]*
+Nlocal: \s*(?P<nlocal_ave>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) ave (?P<nlocal_max>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) max (?P<nlocal_min>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) min
+Histogram: .*$
+Nghost: \s*(?P<nghost_ave>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) ave (?P<nghost_max>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) max (?P<nghost_min>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) min
+Histogram: .*$
+Neighs: \s*(?P<neighs_ave>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) ave (?P<neighs_max>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) max (?P<neighs_min>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?) min
+Histogram: .*$
+[\s\S]*
+Total # of neighbors = (?P<total_no_of_neighbors>[-+]?\d+)
+Ave neighs\/atom = (?P<ave_neighs_per_atom>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)
+(?:Ave special neighs\/atom = (?P<ave_special_neighs_per_atom>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
+)?Neighbor list builds = (?P<neigh_list_builds>[-+]?\d+)
+Dangerous builds (?:(?:= (?P<neigh_list_dangerous_builds>[-+]?\d+))|(?:not checked))(?:
+[\s\S]*(?:
+PPPM initialization \.\.\.
+[\s\S]*
+\s*G vector \(1\/distance\) = (?P<k_g_vector>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
+\s*grid = (?P<kgrid_nx>[-+]?\d+) (?P<kgrid_ny>[-+]?\d+) (?P<kgrid_nz>[-+]?\d+)
+\s*stencil order = (?P<k_stencil_order>[-+]?\d+)
+\s*estimated absolute RMS force accuracy = (?P<k_absolute_rms_force_accuracy>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
+\s*estimated relative force accuracy = (?P<k_relative_rms_force_accuracy>[-+]?[0-9]*\.?[0-9]+(?:[eE][-+]?[0-9]+)?)
+\s*using single precision FFTs
+\s*3d grid and FFT values\/proc = (?P<k_grid_points_per_proc>[-+]?\d+) (?P<k_fft_values_per_proc>[-+]?\d+)
+[\s\S]*)?)?Total wall time: (?P<total_wall_time>(?:\d+:)*(?:\d+))$

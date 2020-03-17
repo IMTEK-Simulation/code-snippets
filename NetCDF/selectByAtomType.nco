@@ -1,0 +1,500 @@
+///////////////////////////////////////////////////////////////////////////////
+//
+// "Hyperslabbing" by variable along dimension "atom", 
+//
+// Original version included in NCO User Guide at http://nco.sf.net/nco.html#sort
+//
+// Modified for LAMMPS NetCDF trajectory. 
+// ATTENTION: All (custom) fields in NetCDF must be treated explicitly.
+// Not usable "out of the box", modify to match own NetCDF  fields.
+// Check the format of your own NetCDF trajectories with `ncdump -c output`
+// and compare against reference file structure described below.
+//
+// Copyright (C) 2019 IMTEK Simulation
+// Author: Johannes Hörmann, johannes.hoermann@imtek.uni-freiburg.de 
+//
+// execute with
+//
+//  ncap2 -D9 -v -O -S selectByAtomType.nco in.nc first_intermediate.nc
+//
+// Afterwards, drop obsolete dimension with
+//
+//  ncks -O -x -v atom first_intermediate.nc second_intermediate.nc
+//
+// and rename the new output dimension
+//
+//  ncrename -O -d atom_out,atom second_intermediate.nc final.out
+//
+///////////////////////////////////////////////////////////////////////////////
+//
+// The LAMMPS NetCDF structure (with some custom outputs) 
+// looks like this (ncdump -c output):
+//
+//  netcdf default {
+//  dimensions:
+//    spatial = 3 ;
+//    label = 10 ;
+//    frame = UNLIMITED ; // (351 currently)
+//    cell_spatial = 3 ;
+//    cell_angular = 3 ;
+//    atom = 547576 ;
+//    Voigt = 6 ;
+//  variables:
+//    char spatial(spatial) ;
+//    char cell_spatial(spatial) ;
+//    char cell_angular(spatial, label) ;
+//    double time(frame) ;
+//      time:units = "femtosecond" ;
+//      time:scale_factor = 2. ;
+//    double cell_origin(frame, cell_spatial) ;
+//      cell_origin:units = "Angstrom" ;
+//      cell_origin:scale_factor = 1. ;
+//    double cell_lengths(frame, cell_spatial) ;
+//      cell_lengths:units = "Angstrom" ;
+//      cell_lengths:scale_factor = 1. ;
+//    double cell_angles(frame, cell_angular) ;
+//      cell_angles:units = "degree" ;
+//    int id(frame, atom) ;
+//    int mol(frame, atom) ;
+//    int type(frame, atom) ;
+//    float mass(frame, atom) ;
+//    float coordinates(frame, atom, spatial) ;
+//    float velocities(frame, atom, spatial) ;
+//    float forces(frame, atom, spatial) ;
+//    float f_storeAnteShakeForces(frame, atom, spatial) ;
+//    float f_storeAnteStatForces(frame, atom, spatial) ;
+//    float f_storeAnteFreezeForces(frame, atom, spatial) ;
+//    float f_storeUnconstrainedForces(frame, atom, spatial) ;
+//    float f_storeForcesAve(frame, atom, spatial) ;
+//    float f_storeAnteShakeForcesAve(frame, atom, spatial) ;
+//    float f_storeAnteStatForcesAve(frame, atom, spatial) ;
+//    float f_storeAnteFreezeForcesAve(frame, atom, spatial) ;
+//    float f_storeUnconstrainedForcesAve(frame, atom, spatial) ;
+//    float c_peratom_stress(frame, atom, Voigt) ;
+//    float f_peratom_stress_ave(frame, atom, Voigt) ;
+//  
+//  // global attributes:
+//      :Conventions = "AMBER" ;
+//      :ConventionVersion = "1.0" ;
+//      :program = "LAMMPS" ;
+//      :programVersion = "16 Mar 2018" ;
+//  data:
+//  
+//   spatial = "" ;
+//  
+//   cell_spatial = "" ;
+//  }
+//
+// This script, however, expects a different permutation of dimensions:
+//  
+//  netcdf _thinned_permuted_sorted_default_indenter_only {
+//  dimensions:
+//    frame = 351 ;
+//    cell_angular = 3 ;
+//    spatial = 3 ;
+//    label = 10 ;
+//    cell_spatial = 3 ;
+//    atom = UNLIMITED ; // (547576 currently)
+//  variables:
+//    double cell_angles(frame, cell_angular) ;
+//      cell_angles:units = "degree" ;
+//    char cell_angular(spatial, label) ;
+//    double cell_lengths(frame, cell_spatial) ;
+//      cell_lengths:units = "Angstrom" ;
+//      cell_lengths:scale_factor = 1. ;
+//    double cell_origin(frame, cell_spatial) ;
+//      cell_origin:units = "Angstrom" ;
+//      cell_origin:scale_factor = 1. ;
+//    char cell_spatial(spatial) ;
+//    float coordinates(atom, frame, spatial) ;
+//    float f_storeAnteFreezeForces(atom, frame, spatial) ;
+//    float f_storeAnteFreezeForcesAve(atom, frame, spatial) ;
+//    float f_storeAnteShakeForces(atom, frame, spatial) ;
+//    float f_storeAnteShakeForcesAve(atom, frame, spatial) ;
+//    float f_storeAnteStatForces(atom, frame, spatial) ;
+//    float f_storeAnteStatForcesAve(atom, frame, spatial) ;
+//    float f_storeForcesAve(atom, frame, spatial) ;
+//    float f_storeUnconstrainedForces(atom, frame, spatial) ;
+//    float f_storeUnconstrainedForcesAve(atom, frame, spatial) ;
+//    float forces(atom, frame, spatial) ;
+//    int id(atom, frame) ;
+//    char spatial(spatial) ;
+//    double time(frame) ;
+//      time:units = "femtosecond" ;
+//      time:scale_factor = 2. ;
+//    int type(atom, frame) ;
+//  
+//  // global attributes:
+//      :Conventions = "AMBER" ;
+//      :ConventionVersion = "1.0" ;
+//      :program = "LAMMPS" ;
+//      :programVersion = "16 Mar 2018" ;
+//  data:
+//  
+//   cell_spatial = "" ;
+//  
+//   spatial = "" ;
+//  }
+//
+// The following workflow (bash) suggests how comply with this format:
+// (see accompanying file selectByAtomID.sh)
+//
+//  #!/bin/bash
+//  set -e
+//  
+//  # This is a sample on how to use selectByAtomType.nco
+//  # perf stat -B prints performance statistics for each step
+//  
+//  # The -D5 option makes NetCDF operators print level five debug information
+//  
+//  # delete unwanted quantities
+//  echo "01 -- DELETE"
+//  perf stat -B ncks -D5 -O -x \
+//    -v c_peratom_stress,f_peratom_stress_ave,mass,mol,velocities \
+//    $1 _thinned_$2
+//  
+//  # permute dimensions (apparently, this is the most demanding step)
+//  echo "02 -- PERMUTE"
+//  perf stat -B ncpdq -D5 -O \
+//    -a atom,frame,spatial _thinned_$2 _thinned_permuted_sorted_$2
+//  
+//  # If NetCDF is NOT YET sorted by atom id, then sorting is needed here
+//  
+//  # select based on variable-dependent criterion
+//  # You must sort and copy all variables of interest explicitly within
+//  # selectByAtomType.nco! Otherwise, they will not appear in the output.
+//  echo "03 -- SELECT"
+//  perf stat -B ncap2 -D5 -O -v -S selectByAtomType.nco \
+//    _thinned_permuted_sorted_$2 _thinned_permuted_sorted_selected_$2
+//  
+//  # drop old atom coordinate
+//  echo "04 -- DROP"
+//  perf stat -B ncks -D5 -O -x -v atom \
+//    _thinned_permuted_sorted_selected_$2 \
+//    _thinned_permuted_sorted_selected_deleted_$2
+//  
+//  # rename new atom coordinate to
+//  echo "05 -- RENAME"
+//  perf stat -B ncrename -D5 -O -d atom_out,atom \
+//    _thinned_permuted_sorted_selected_deleted_$2 \
+//    _thinned_permuted_sorted_selected_deleted_renamed_$2
+//  
+//  # permute back
+//  echo "06 -- PERMUTE"
+//  perf stat -B ncpdq -D5 -O -a frame,atom,spatial \
+//    _thinned_permuted_sorted_selected_deleted_renamed_$2 $2
+//  
+//  # now, you have a NetCDF trajectory of your designated atom subset only
+//  
+///////////////////////////////////////////////////////////////////////////////
+//
+// Following fields are to be copied as they are:
+//
+//  double cell_angles(frame, cell_angular) ;
+//          cell_angles:units = "degree" ;
+//  char cell_angular(spatial, label) ;
+//  double cell_lengths(frame, cell_spatial) ;
+//          cell_lengths:units = "Angstrom" ;
+//          cell_lengths:scale_factor = 1. ;
+//  double cell_origin(frame, cell_spatial) ;
+//          cell_origin:units = "Angstrom" ;
+//          cell_origin:scale_factor = 1. ;
+//  char cell_spatial(spatial) ;
+//  char spatial(spatial) ;
+//  double time(frame) ;
+//          time:units = "femtosecond" ;
+//          time:scale_factor = 2. ;
+//
+// Interestingly, "scale_factor" attributes are not copied. Instead, 
+// the variable of interest is apparently stored with correct scaling 
+// aplied. Thus, copying scale factors manually will result in wrong
+// variable values later on.
+//
+// Following fields are "hyperslabbed" by atom type:
+//
+//  int id(frame, atom) ;
+//  int type(frame, atom) ;
+//  float coordinates(frame, atom, spatial) ;
+//  float forces(frame, atom, spatial) ;
+//  float f_storeAnteFreezeForces(frame, atom, spatial) ;
+//  float f_storeAnteFreezeForcesAve(frame, atom, spatial) ;
+//  float f_storeAnteShakeForces(frame, atom, spatial) ;
+//  float f_storeAnteShakeForcesAve(frame, atom, spatial) ;
+//  float f_storeAnteStatForces(frame, atom, spatial) ;
+//  float f_storeAnteStatForcesAve(frame, atom, spatial) ;
+//  float f_storeForcesAve(frame, atom, spatial) ;
+//  float f_storeUnconstrainedForces(frame, atom, spatial) ;
+//  float f_storeUnconstrainedForcesAve(frame, atom, spatial) ;
+//
+// All other variables are dropped.
+//
+// Use and modify the following regex to manipulate 
+// the list of variables above:
+//
+//    ^//  [^ ]* ([^(]*)\(.*$
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+//////////////////////////////////////
+// allocate intermediate variables //
+//////////////////////////////////////
+
+print("Reading data...\n");
+
+// Store input variables in RAM 
+// before overwriting them with output initialization
+
+// variables necessary for selection
+*var_zpos[$atom]=coordinates(:,0,2);
+*var_type[$atom]='type'(:,0);
+
+*in_id=id;
+*in_type='type';
+*in_coordinates=coordinates;
+*in_forces=forces;
+*in_f_storeAnteFreezeForces=f_storeAnteFreezeForces;
+*in_f_storeAnteFreezeForcesAve=f_storeAnteFreezeForcesAve;
+*in_f_storeAnteShakeForces=f_storeAnteShakeForces;
+*in_f_storeAnteShakeForcesAve=f_storeAnteShakeForcesAve;
+*in_f_storeAnteStatForces=f_storeAnteStatForces;
+*in_f_storeAnteStatForcesAve=f_storeAnteStatForcesAve;
+*in_f_storeForcesAve=f_storeForcesAve;
+*in_f_storeUnconstrainedForces=f_storeUnconstrainedForces;
+*in_f_storeUnconstrainedForcesAve=f_storeUnconstrainedForcesAve;
+
+///////////////////////
+// build 1d sort map //
+///////////////////////
+
+print("Constructing sort map...\n");
+
+// Included in NCO User Guide at http://nco.sf.net/nco.html#sort
+
+/* NB: Single quotes around EOF above turn off shell parameter 
+    expansion in "here documents". This in turn prevents the
+    need for protecting dollarsign characters in NCO scripts with
+    backslashes when the script is cut-and-pasted (aka "moused") 
+    from an editor or e-mail into a shell console window */
+
+/* Copy coordinates and variable(s) of interest into RAM variable(s)
+   Benefits:
+   1. ncap2 defines writes all variables on LHS of expression to disk
+      Only exception is RAM variables, which are stored in RAM only
+      Repeated operations on regular variables takes more time, 
+      because changes are written to disk copy after every change.
+      RAM variables are only changed in RAM so script works faster
+      RAM variables can be written to disk at end with ram_write()
+   2. Script permutes variables of interest during processing
+      Safer to work with copies that have different names
+      This discourages accidental, mistaken use of permuted versions
+   3. Makes this script a more generic template:
+      var_in instead of specific variable names everywhere */
+
+// select first frame as reference
+
+*dmn_in_sz=$atom.size; // size of input arrays in the dimension to filter
+
+// use atom type and z-position for masking
+
+// allocate mask and sort map of desired size
+*msk_flg=var_type*0;
+*srt_map=var_type*0;
+
+// chose all atoms of type 11 (Au) and of z position > 5 Angstrom
+where( (var_type == 11) && (var_zpos > 5.) ) msk_flg=1; elsewhere msk_flg=0;
+/* The sort() routine is overloaded, and takes one or two arguments
+   The second argument (optional) is the "sort map" (srt_map below)
+   Pass the sort map by reference, i.e., prefix with an ampersand
+   If the sort map does not yet exist, then it will be created and 
+   returned as an integer type the same shape as the input variable.
+   The output of sort(), on the LHS, is a sorted version of the input
+   msk_flg is not needed in its original order after sort()
+   Hence we use msk_flg as both input to and output from sort()
+   Doing this prevents the need to define a new, unneeded variable */
+// var_type.ram_delete();
+// var_zpos.ram_delete();
+
+*msk_flg=sort(msk_flg,&srt_map);
+// now, if atoms are always sorted by atom id, the constructed map and mask
+// must be valid for any frame as long as atom ids do not change
+
+// Count number of valid points in mask by summing the one's
+*msk_nbr=msk_flg.total();
+
+// delete obsolete RAM variables here
+msk_flg.ram_delete();
+
+//////////////////////////////////////////
+// construct sort map for >1d variables //
+//////////////////////////////////////////
+
+print("Casting sort map to >1d...\n");
+
+// allocate mask and sort map of desired size
+
+// simple sort map along atom dimension
+// *srt_map=0*var_type;
+// sort map along frame and atom dimension
+*srt_map_2d=0*id;
+// sort map along frame, atom and spatial dimension
+*srt_map_3d=0*int(coordinates);
+
+// Multiply base offset by factorial of lesser dimensions
+srt_map_2d*=$spatial.size;
+srt_map_3d*=$frame.size*$spatial.size;
+
+*frame_idx=array(0,1,$frame);
+*spatial_idx=array(0,1,$spatial)*$frame.size;
+
+*frame_spatial_idx[$frame,$spatial]=frame_idx+spatial_idx;
+
+srt_map_2d+=frame_idx;
+srt_map_3d+=frame_spatial_idx;
+
+//print("sort map 2d =\n");print(srt_map_2d);
+//print("sort map 3d =\n");print(srt_map_3d);
+
+/////////////////////////
+// sort by binary mask //
+/////////////////////////
+
+print("Sorting...\n");
+
+in_id=remap(in_id,srt_map_2d);
+in_type=remap(in_type,srt_map_2d);
+
+in_coordinates=remap(in_coordinates,srt_map_3d);
+in_forces=remap(in_forces,srt_map_3d);
+in_f_storeAnteFreezeForces=remap(in_f_storeAnteFreezeForces,srt_map_3d);
+in_f_storeAnteFreezeForcesAve=remap(in_f_storeAnteFreezeForcesAve,srt_map_3d);
+in_f_storeAnteShakeForces=remap(in_f_storeAnteShakeForces,srt_map_3d);
+in_f_storeAnteShakeForcesAve=remap(in_f_storeAnteShakeForcesAve,srt_map_3d);
+in_f_storeAnteStatForces=remap(in_f_storeAnteStatForces,srt_map_3d);
+in_f_storeAnteStatForcesAve=remap(in_f_storeAnteStatForcesAve,srt_map_3d);
+in_f_storeForcesAve=remap(in_f_storeForcesAve,srt_map_3d);
+in_f_storeUnconstrainedForces=remap(in_f_storeUnconstrainedForces,srt_map_3d);
+in_f_storeUnconstrainedForcesAve=remap(in_f_storeUnconstrainedForcesAve,srt_map_3d);
+
+//////////////////////////////
+// introduce new dimension //
+//////////////////////////////
+
+print("Introducing new dimension...\n");
+
+// Define output dimension equal in size to number of valid points
+defdim("atom_out",msk_nbr);
+
+/////////////////////////
+// hyperslab to output //
+/////////////////////////
+
+print("Hyperslabbing...\n");
+
+// assign consecutive new atom ids starting at 1
+*atom_idx=array(1,1,$atom_out); 
+*id[$atom_out,$frame]=atom_idx;
+
+// Hyperslab variables of dimensions (frame,atom) 
+// *id[$atom_out,$frame]=in_id((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:);
+*'type'[$atom_out,$frame]=in_type((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:);
+
+// Hyperslab variables of dimensions (frame,atom,spatial) 
+*coordinates[$atom_out,$frame,$spatial]=in_coordinates((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*forces[$atom_out,$frame,$spatial]=in_forces((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeAnteFreezeForces[$atom_out,$frame,$spatial]=in_f_storeAnteFreezeForces((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeAnteFreezeForcesAve[$atom_out,$frame,$spatial]=in_f_storeAnteFreezeForcesAve((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeAnteShakeForces[$atom_out,$frame,$spatial]=in_f_storeAnteShakeForces((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeAnteShakeForcesAve[$atom_out,$frame,$spatial]=in_f_storeAnteShakeForcesAve((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeAnteStatForces[$atom_out,$frame,$spatial]=in_f_storeAnteStatForces((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeAnteStatForcesAve[$atom_out,$frame,$spatial]=in_f_storeAnteStatForcesAve((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeForcesAve[$atom_out,$frame,$spatial]=in_f_storeForcesAve((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeUnconstrainedForces[$atom_out,$frame,$spatial]=in_f_storeUnconstrainedForces((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+*f_storeUnconstrainedForcesAve[$atom_out,$frame,$spatial]=in_f_storeUnconstrainedForcesAve((dmn_in_sz-msk_nbr):(dmn_in_sz-1),:,:);
+
+///////////////////////////////
+// allocate output variables //
+///////////////////////////////
+
+print("Allocating output variables...\n");
+
+cell_angles=cell_angles;
+cell_angular=cell_angular;
+cell_lengths=cell_lengths;
+cell_origin=cell_origin;
+cell_spatial=cell_spatial;
+spatial=spatial;
+time=time;
+
+// scale factors not copied explicitly, see comment in header
+// cell_lengths@scale_factor=cell_lengths@scale_factor;
+// cell_origin@scale_factor=cell_origin@scale_factor;
+// time@scale_factor=time@scale_factor;
+
+// initialize output
+// number literal samples from http://nco.sourceforge.net/nco.html#Number-literals:
+
+// var[$rlev]=0.1;     // Variable will be type @code{NC_DOUBLE}
+// var[$lon_grd]=2.0;  // Variable will be type @code{NC_DOUBLE}
+// var[$gds_crd]=2e3;  // Variable will be type @code{NC_DOUBLE}
+// var[$gds_crd]=2.0f; // Variable will be type @code{NC_FLOAT} (note "f")
+// var[$gds_crd]=2e3f; // Variable will be type @code{NC_FLOAT} (note "f")
+// var[$gds_crd]=2;    // Variable will be type @code{NC_INT}
+// var[$gds_crd]=-3;   // Variable will be type @code{NC_INT}
+// var[$gds_crd]=2s;   // Variable will be type @code{NC_SHORT}
+// var[$gds_crd]=-3s;  // Variable will be type @code{NC_SHORT}
+// var@att=41.;        // Attribute will be type @code{NC_DOUBLE}
+// var@att=41.f;       // Attribute will be type @code{NC_FLOAT}
+// var@att=41;         // Attribute will be type @code{NC_INT}
+// var@att=-21s;       // Attribute will be type @code{NC_SHORT}  
+// var@units="kelvin"; // Attribute will be type @code{NC_CHAR}
+
+////////////////////////////
+// write output variables //
+////////////////////////////
+
+print("Writing output to disk...\n");
+
+// write results
+id.ram_write();
+'type'.ram_write();
+coordinates.ram_write();
+forces.ram_write();
+f_storeAnteFreezeForces.ram_write();
+f_storeAnteFreezeForcesAve.ram_write();
+f_storeAnteShakeForces.ram_write();
+f_storeAnteShakeForcesAve.ram_write();
+f_storeAnteStatForces.ram_write();
+f_storeAnteStatForcesAve.ram_write();
+f_storeForcesAve.ram_write();
+f_storeUnconstrainedForces.ram_write();
+f_storeUnconstrainedForcesAve.ram_write();
+
+////////////////////
+// Free up memory //
+////////////////////
+
+print("Cleaning up...\n");
+
+// delete temporary variables
+in_id.ram_delete();
+in_type.ram_delete();
+in_coordinates.ram_delete();
+in_forces.ram_delete();
+in_f_storeAnteFreezeForces.ram_delete();
+in_f_storeAnteFreezeForcesAve.ram_delete();
+in_f_storeAnteShakeForces.ram_delete();
+in_f_storeAnteShakeForcesAve.ram_delete();
+in_f_storeAnteStatForces.ram_delete();
+in_f_storeAnteStatForcesAve.ram_delete();
+in_f_storeForcesAve.ram_delete();
+in_f_storeUnconstrainedForces.ram_delete();
+in_f_storeUnconstrainedForcesAve.ram_delete();
+
+srt_map.ram_delete();
+srt_map_3d.ram_delete();
+
+frame_idx.ram_delete();
+atom_idx.ram_delete();
+spatial_idx.ram_delete();
+frame_spatial_idx.ram_delete();

@@ -7,5 +7,6 @@ Code snippets related to LAMMPS data text files.
   `MergeLammpsDatafiles.py` and its command line wrapper `merge.py` utilize
   `pizza.py` to compare a possibly incomplete datafile against a reference and
   restore missing sections.
+- `to_hybrid.py`: Converts LAMMPS pair_coeff lines to 'pair_style hybrid' format.
 
 See file headers for usage samples.
