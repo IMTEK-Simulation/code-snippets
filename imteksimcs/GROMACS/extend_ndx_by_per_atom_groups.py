@@ -274,5 +274,6 @@ def main():
     logger.info("Done.")
     # Temporary files are released automatically
 
+
 if __name__ == '__main__':
     main()

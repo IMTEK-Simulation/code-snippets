@@ -14,7 +14,7 @@ module_dir = os.path.dirname(os.path.abspath(__file__))
 
 if __name__ == "__main__":
     setup(
-        name='imtek-simulation-code-snippets',
+        name='imteksimcs',
         version=versioneer.get_version(),
         cmdclass=versioneer.get_cmdclass(),
         description='This repository contains a random collection of code snippets for pre- and postprocessing simulation runs with Ovito, ASE and other tools.',
@@ -29,7 +29,7 @@ if __name__ == "__main__":
         python_requires='>=3.6.8',
         zip_safe=False,
         install_requires=[
-            'numpy>=1.16.2',
+            'numpy>=1.15.2',
             'scipy>=1.2.1',
             'pandas>=0.24.2',
         ],
@@ -59,6 +59,7 @@ if __name__ == "__main__":
         entry_points={
             'console_scripts': [
                 'extend_ndx_by_per_atom_groups = imteksimcs.GROMACS.extend_ndx_by_per_atom_groups:main [GMX]',
+                'gmx_tools = imteksimcs.GROMACS.gmx_tools:main [GMX]',
                 'join_thermo = imteksimcs.LAMMPS_thermo.join_thermo:main',
                 'ncfilter = imteksimcs.NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
                 'netcdf2data = imteksimcs.NetCDF.netcdf2data:main [Ovito]',
