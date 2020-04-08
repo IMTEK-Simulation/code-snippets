@@ -52,19 +52,19 @@ if __name__ == "__main__":
             ],
         },
         scripts=[
-            'imteksimcs/LAMMPS_data/merge.py', # requires Pizza.py (Python 2.7)
-            'imteksimcs/LAMMPS_thermo/extract_thermo.sh',
-            'imteksimcs/NetCDF/ncjoin.py', # requires NetCDF4
+            'imteksimcs/cli/LAMMPS_data/merge.py', # requires Pizza.py (Python 2.7)
+            'LAMMPS_thermo/extract_thermo.sh',
         ],
         entry_points={
             'console_scripts': [
-                'extend_ndx_by_per_atom_groups = imteksimcs.GROMACS.extend_ndx_by_per_atom_groups:main [GMX]',
-                'gmx_tools = imteksimcs.GROMACS.gmx_tools:main [GMX]',
-                'join_thermo = imteksimcs.LAMMPS_thermo.join_thermo:main',
-                'ncfilter = imteksimcs.NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
-                'netcdf2data = imteksimcs.NetCDF.netcdf2data:main [Ovito]',
-                'strip_comments = imteksimcs.LAMMPS_data.strip_comments:main',
-                'to_hybrid = imteksimcs.LAMMPS_data.to_hybrid:main',
+                'gmx_tools = imteksimcs.cli.GROMACS.gmx_tools:main [GMX]',
+                'join_thermo = imteksimcs.cli.LAMMPS_thermo.join_thermo:main',
+                'ncfilter = imteksimcs.cli.NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
+                'netcdf2data = imteksimcs.cli.NetCDF.netcdf2data:main [Ovito]',
+                'strip_comments = imteksimcs.cli.LAMMPS_data.strip_comments:main',
+                'to_hybrid = imteksimcs.cli.LAMMPS_data.to_hybrid:main',
+                'ncjoin = imteksimcs.cli.NetCDF.ncjoin:main [NetCDF]', # requires NetCDF4
+
             ],
         },
     )

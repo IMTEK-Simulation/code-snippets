@@ -11,6 +11,7 @@ defaults = {
     'mdpout' : 'out.mdp',
     'k' :      1000,
     'rate':    -0.1,
+    '
 }
 
 def docstring_parameter(*args, **kwargs):
@@ -75,7 +76,7 @@ def add_pull_groups_to_mdp(
         pull_mdp["pull_coord{:d}_dim".format(i+1)]      = 'Y Y Y'     # pull in all directions
         pull_mdp["pull_coord{:d}_groups".format(i+1)]   = "1 {:d}".format(i+2) # groups 1 (Chain A) and 2 (Chain B) define the reaction coordinate
         pull_mdp["pull_coord{:d}_start".format(i+1)]    = 'yes'       # define initial COM distance > 0
-        pull_mdp["pull_coord{:d}_rate".format(i+1)]     = -0.1         # 0.1 nm per ps = 10 nm per ns
-        pull_mdp["pull_coord{:d}_k".format(i+1)]        = 1000        # kJ mol^-1 nm^-2
+        pull_mdp["pull_coord{:d}_rate".format(i+1)]     = rate        # 0.1 nm per ps = 10 nm per ns
+        pull_mdp["pull_coord{:d}_k".format(i+1)]        = k           # kJ mol^-1 nm^-2
 
     pull_mdp.write(mdpout)

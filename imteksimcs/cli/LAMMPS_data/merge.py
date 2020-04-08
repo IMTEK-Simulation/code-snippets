@@ -58,7 +58,7 @@ exec pizza.py -f "$(basename $0)" "$@"
 import sys
 import argparse
 import traceback
-from MergeLammpsDataFiles import merge_lammps_datafiles
+from imteksimcs.LAMMPS_data.MergeLammpsDataFiles import merge_lammps_datafiles
 
 # recommendation from https://pizza.sandia.gov/doc/Section_basics.html#3_2
 

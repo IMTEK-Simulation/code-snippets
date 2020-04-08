@@ -1,6 +1,6 @@
 #!/usr/bin/env ovitos
 #
-# ncfilter.py
+# netcdf2data.py
 #
 # Copyright (C) 2018, 2019 IMTEK Simulation
 # Author: Johannes Hoermann, johannes.hoermann@imtek.uni-freiburg.de
@@ -29,89 +29,9 @@
 
 import logging
 
+
 # adapted from
 # https://ovito.org/manual/python/modules/ovito_modifiers.html#ovito.modifiers.LoadTrajectoryModifier
-def main():
-    import argparse
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--frames', '-f',
-        help = "Frames to extract, can be list or range of format '1,3,5-7'",
-        type = parseRanges,
-        default = None)
-    parser.add_argument('--style', '-s',
-        help="LAMMPS atom style (default: full)",
-        default="full")
-    parser.add_argument('--verbose', '-v', action='store_true',
-        help='Make this tool more verbose')
-    parser.add_argument('--debug', action='store_true',
-        help='Make this tool print debug info')
-    parser.add_argument('topology_file', help='LAMMPS data file')
-    parser.add_argument('trajectory_file', help='NetCDF trajectory file')
-    args = parser.parse_args()
-
-    if args.debug:
-        loglevel = logging.DEBUG
-    elif args.verbose:
-        loglevel = logging.INFO
-    else:
-        loglevel = logging.WARNING
-
-    logging.basicConfig(level = loglevel)
-    logger = logging.getLogger('netcdf2data.main')
-
-    if args.frames is not None:
-        logger.info("Extracting selected frames '{}'".format(args.frames))
-
-    logger.info("Expecting atom style '{}'".format(args.style))
-
-    extractFrames(
-        topology_file   = args.topology_file,
-        trajectory_file = args.trajectory_file,
-        frames          = args.frames,
-        atom_style      = args.style)
-
-    return
-
-def parseRanges(s):
-    """ Parses ranges specified in a string into lists:
-
-    Examples
-    --------
-
-    In [3]: s = '1, 2, 3, 4, 5, 6'
-
-    In [4]: parseRanges(s)
-    Out[4]: [1, 2, 3, 4, 5, 6]
-
-    In [5]: parseRanges('3-6')
-    Out[5]: [3, 4, 5]
-
-    In [6]: parseRanges('3-16-3')
-    Out[6]: [3, 6, 9, 12, 15]
-
-    In [6]: parseRanges('1,20-22,3-16-3')
-    Out[6]: [1, 3, 6, 9, 12, 15, 20, 21, 22]
-
-    Adapted from
-        https://stackoverflow.com/questions/4726168/parsing-command-line-input-for-numbers
-    """
-    result = set()
-    for part in s.split(','):
-        #x = part.split('-')
-        if '-' in part:
-            i = part.index('-')
-            result.update( range(*map(int, part.split('-'))) )
-        else:
-            result.add( int(part) )
-        #result.update(range(int(x[0]), int(x[-1]) + 1))
-    return sorted(result)
-
-    # if '-' in s:
-    #     i = s.index('-')
-    #     return range(*map(int, s.split('-')))
-    # return map(int, s.split(','))
-
-
 def extractFrames(
     topology_file   = 'datafile.lammps', # lammps data file
     trajectory_file = 'trajectory.nc', # netcdf trajectory
@@ -174,6 +94,3 @@ def extractFrames(
             'lammps_data', atom_style = atom_style, frame = frame)
 
     return
-
-if __name__ == '__main__':
-    main()

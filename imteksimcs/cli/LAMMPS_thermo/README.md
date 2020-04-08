@@ -1,4 +1,4 @@
-Python modules related to LAMMPS log files and thermo output.
+Command line interfaces for python modules related to LAMMPS log files and thermo output.
 
 - `join_thermo.py`: Concatenates LAMMPS thermo outputs. 
 

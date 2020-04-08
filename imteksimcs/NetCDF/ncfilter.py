@@ -61,7 +61,7 @@ from netCDF4 import Dataset
 from gromacs.fileformats.ndx import NDX
 
 # https://gist.github.com/chengdi123000/42ec8ed2cbef09ee050766c2f25498cb
-from MPIFileHandler import MPIFileHandler
+from imteksimcs.util.MPIFileHandler import MPIFileHandler
 
 # global settings
 standard_loglevel   = logging.ERROR
@@ -472,92 +472,6 @@ def ncfilter(
         # else:
         #  logger.info("Skipped input variable {} on rank {}/{}.".format(
         #    vname, rank, size))
-          
+
     # nc.close() not necessary due to 'with' statement
   logger.debug('Goodbye from rank {}/{}.'.format(rank, size))
-
-def main():
-  import argparse
-
-  # in order to have both:
-  # * preformatted help text and ...
-  # * automatic display of defaults
-  class ArgumentDefaultsAndRawDescriptionHelpFormatter(
-      argparse.ArgumentDefaultsHelpFormatter, argparse.RawDescriptionHelpFormatter):
-    pass
-
-  parser = argparse.ArgumentParser(description=__doc__,
-      formatter_class = ArgumentDefaultsAndRawDescriptionHelpFormatter)
-
-  parser.add_argument(
-    'infile', default='default.nc', help='NetCDF trajectory')
-  parser.add_argument(
-    'outfile', default='filtered.nc', help='NetCDF trajectory')
-  parser.add_argument(
-    'ndx', default='group.ndx', help='GROMACS style .ndx file')
-  parser.add_argument(
-    '-n', '--ndx', default='group.ndx', dest='ndx',
-    help='GROMACS style .ndx file')
-  parser.add_argument(
-    'group', default='indenter', help='Group selection as named in .ndx')
-  parser.add_argument(
-    '-g','--group', default='indenter', dest='group',
-    help='Group selection as named in .ndx')
-  parser.add_argument(
-    '-sv','--selection-variable', default='id', dest='selvarname',
-    help='Name of NetCDF variable to compare against indices in .ndx file')
-  parser.add_argument(
-    '-sd','--selection-dimension', default='atom', dest='seldimname',
-    help='Name of NetCDF dimension to reduce')
-  parser.add_argument(
-    '-pd','--parallelization-dimension', default='frame', dest='pardimname',
-    help='Name of NetCDF dimension for chunk-wise parallel processing.')
-  parser.add_argument(
-    '-f','--fmt', '--format', default='NETCDF4', dest='format',
-    help=' '.join(('NetCDF format. Refer to',
-    'http://unidata.github.io/netcdf4-python/netCDF4/index.html#section1'))
-    )
-  parser.add_argument(
-    '-i','--independent', action='store_false', dest='collective',
-    help=' '.join(('Parallel IO mode. Independent mode is used',
-      'and unlimited are written as finite dimensions if specified.',
-      'Otherwise, collective mode is used by default. Please refert to',
-      'http://unidata.github.io/netcdf4-python/netCDF4/index.html#section13'))
-    )
-  parser.add_argument(
-    '-l','--log', default=None, const='log.out', dest='logfile', nargs='?',
-    help=' '.join(("Write output to 'log.out' or any other log file whose name",
-      "is specified optionally after this flag, instead of stream output to",
-      "the terminal"))
-    )
-  parser.add_argument('--verbose', '-v', action='count', dest='verbose',
-      default=0, help='Make this tool more verbose')
-  parser.add_argument('--debug','-d', action='store_true',
-      help='Make this tool print debug info')
-  args = parser.parse_args()
-
-  loglevel = logging.ERROR
-  
-  if args.verbose > 0:
-    loglevel = logging.WARN
-  if args.verbose > 1:
-    loglevel = logging.INFO
-  if args.debug or (args.verbose > 2):
-    loglevel = logging.DEBUG
-
-  ncfilter(
-    infile      = args.infile,
-    outfile      = args.outfile,
-    ndx_file    = args.ndx,
-    g_sel       = args.group,
-    selvarname  = args.selvarname,
-    seldimname  = args.seldimname,
-    pardimname  = args.pardimname,
-    format      = args.format,
-    collective  = args.collective,
-    loglvl      = loglevel,
-    logout      = args.logfile
-  )
-
-if __name__ == '__main__':
-  main()

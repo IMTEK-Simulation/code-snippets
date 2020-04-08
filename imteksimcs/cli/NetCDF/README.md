@@ -1,4 +1,4 @@
-Python modules related to NetCDF files.
+Command line interfaces for python modules related to NetCDF files.
 
 - `ncfilter.py`: Extracts subsets (of atoms, specified by GROMACS-type .ndx
   files) from AMBER NetCDF trajectories in parallel efficiently via 
