@@ -40,11 +40,6 @@ import sys  # for stdout and stderr
 import tempfile
 import logging
 
-# from imteksimcs.GROMACS.extend_ndx_by_per_atom_groups import \
-#    get_atom_indices, extend_ndx_by_per_atom_groups
-# from imteksimcs.GROMACS.add_pull_groups_to_mdp import \
-#    add_pull_groups_to_mdp
-
 from imteksimcs.GROMACS import extend_ndx_by_per_atom_groups
 from imteksimcs.GROMACS import add_pull_groups_to_mdp
 

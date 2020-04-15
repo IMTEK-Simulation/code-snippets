@@ -44,12 +44,12 @@ if __name__ == "__main__":
             "NetCDF": [
                 "netCDF4>=1.5.1.2",
             ],
-            "Ovito": [
-                "ovito", # not sure how to specify dependency on Ovito
-            ],
-            "Pizza.py": [
-                "Pizza.py", # same as for Ovito
-            ],
+            # "Ovito": [
+            #     "ovito", # not sure how to specify dependency on Ovito
+            # ],
+            # "Pizza.py": [
+            #     "Pizza.py", # same as for Ovito
+            # ],
         },
         scripts=[
             'imteksimcs/cli/LAMMPS_data/merge.py', # requires Pizza.py (Python 2.7)
@@ -59,12 +59,12 @@ if __name__ == "__main__":
             'console_scripts': [
                 'gmx_tools = imteksimcs.cli.GROMACS.gmx_tools:main [GMX]',
                 'join_thermo = imteksimcs.cli.LAMMPS_thermo.join_thermo:main',
+                'make_self_affine = imteksimcs.cli.Random_Fields.make_self_affine:main',
+                'netcdf2data = imteksimcs.cli.NetCDF.netcdf2data:main', # [Ovito]
                 'ncfilter = imteksimcs.cli.NetCDF.ncfilter:main [GMX,NetCDF,MPI]',
-                'netcdf2data = imteksimcs.cli.NetCDF.netcdf2data:main [Ovito]',
+                'ncjoin = imteksimcs.cli.NetCDF.ncjoin:main [NetCDF]', # requires NetCDF4
                 'strip_comments = imteksimcs.cli.LAMMPS_data.strip_comments:main',
                 'to_hybrid = imteksimcs.cli.LAMMPS_data.to_hybrid:main',
-                'ncjoin = imteksimcs.cli.NetCDF.ncjoin:main [NetCDF]', # requires NetCDF4
-
             ],
         },
     )

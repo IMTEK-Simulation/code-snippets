@@ -11,7 +11,6 @@ defaults = {
     'mdpout' : 'out.mdp',
     'k' :      1000,
     'rate':    -0.1,
-    '
 }
 
 def docstring_parameter(*args, **kwargs):
