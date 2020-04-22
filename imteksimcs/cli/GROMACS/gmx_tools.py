@@ -28,9 +28,9 @@
 Examples
 --------
 
-    gmx_tools --verbose make pull_groups \
-        --topology-file default.top --coordinates-file default.gro \
-        --atom-name C12 --residue-name SDS --reference-group-name Substrate -- \
+    gmx_tools --verbose make pull_groups \\
+        --topology-file default.top --coordinates-file default.gro \\
+        --atom-name C12 --residue-name SDS --reference-group-name Substrate -- \\
         in.ndx out.ndx pull.mdp.template pull.mdp
 """
 
@@ -40,6 +40,7 @@ import sys  # for stdout and stderr
 import tempfile
 import logging
 
+from imteksimcs.GROMACS import extend_ndx_by_inversion_group
 from imteksimcs.GROMACS import extend_ndx_by_per_atom_groups
 from imteksimcs.GROMACS import add_pull_groups_to_mdp
 
@@ -55,6 +56,51 @@ class ArgumentDefaultsAndRawDescriptionHelpFormatter(
 
 
 # action blocks
+
+def extend_ndx_by_inversion_group_action(args):
+    """Extend existing .ndx index file by negated residue selection.
+
+    Returns
+    -------
+        str: group name
+    """
+    logger = logging.getLogger(__name__)
+    indices = extend_ndx_by_inversion_group.get_non_residue_indices(
+        gro=args.coordinates_file, top=args.topology_file,
+        residue_name=args.residue_name )
+    logger.debug("Indices: [{:s}]".format(','.join([str(i) for i in indices])))
+
+    # Handing file objects instead of file names to ParmEd does not work well.
+    # Thus, we allow for reading from and writing to stdin and stdout by
+    # rerouting through named temporary files:
+    if not args.ndxin:
+        logger.info('Reading from stdin.')
+        tmpin = tempfile.NamedTemporaryFile(mode='w+', suffix='.ndx')
+        tmpin.write(sys.stdin.read())
+        infile = tmpin.name
+    else:
+        infile = args.ndxin
+        logger.info("Reading from '{:s}'.".format(infile))
+
+    if not args.ndxout:
+        tmpout = tempfile.NamedTemporaryFile(mode='w+', suffix='.ndx')
+        outfile = tmpout.name
+        logger.info('Writing to stdout.')
+    else:
+        outfile = args.ndxout
+        logger.info("Writing to '{:s}'.".format(outfile))
+
+    group_name = extend_ndx_by_inversion_group.extend_ndx_by_group(
+        indices, ndxin=infile, ndxout=outfile, group_name=args.group_name)
+
+    if not args.ndxout: # no explicit output file, write results to stdout
+        sys.stdout.write(tmpout.read())
+
+    logger.debug("Index group: [{:s}]".format(','.join(group_name)))
+    logger.info("Done.")
+
+    return group_name
+    # Temporary files are released automatically
 
 def extend_ndx_by_per_atom_groups_action(args):
     """Extend existing .ndx index file by per-atom groups.
@@ -170,6 +216,29 @@ def positional_arguments_mdp(
 
 
 # optional arguments blocks
+def optional_arguments_extend_ndx_by_inversion_group(parser):
+    """Add extend_ndx_by_inversion_group optional arguments to parser"""
+    ### options
+    parser.add_argument('--topology-file','-t',
+                        default=extend_ndx_by_inversion_group.defaults['top'], type=str,
+                        metavar='TOP', required=False, dest="topology_file",
+                        help='GROMACS .top topology file')
+
+    parser.add_argument('--coordinates-file','-c',
+                        default=extend_ndx_by_inversion_group.defaults['gro'], type=str,
+                        metavar='GRO', required=False, dest="coordinates_file",
+                        help='GROMACS .gro coordinates file')
+
+    parser.add_argument('--residue-name','-r',
+                        default=extend_ndx_by_inversion_group.defaults['residue_name'], type=str,
+                        metavar='RES', required=False, dest="residue_name",
+                        help='name of residue to exclude / negate')
+
+    parser.add_argument('--group-name','-g',
+                        default=extend_ndx_by_inversion_group.defaults['group_name'], type=str,
+                        metavar='GROUP_NAME', required=False, dest="group_name",
+                        help='index group name')
+
 
 def optional_arguments_extend_ndx_by_per_atom_groups(parser):
     """Add extend_ndx_by_per_atom_groups optional arguments to parser"""
@@ -233,6 +302,16 @@ def optional_arguments_add_pull_groups_to_mdp(parser):
 
 
 # subparser blocks
+def subparser_extend_ndx_by_inversion_group(subparsers,
+        command='extend_by_inversion_group', aliases=['invert']):
+    parser = subparsers.add_parser(
+        command, aliases=aliases,
+        help='Extend exisiting .ndx index files by negating a residue selection.',
+        formatter_class=ArgumentDefaultsAndRawDescriptionHelpFormatter)
+    positional_arguments_ndx(parser)
+    optional_arguments_extend_ndx_by_inversion_group(parser)
+    parser.set_defaults(func=extend_ndx_by_inversion_group_action)
+
 
 def subparser_extend_ndx_by_per_atom_groups(subparsers,
         command='extend_by_per_atom_groups', aliases=['atom_groups', 'groups']):
@@ -314,7 +393,9 @@ def main():
     make_subparsers = make_parser.add_subparsers(
         help='sub-command', dest='subcommand', title='make subcommands')
 
+    subparser_extend_ndx_by_inversion_group(ndx_subparsers)
     subparser_extend_ndx_by_per_atom_groups(ndx_subparsers)
+
     subparser_add_pull_groups_to_mdp(mdp_subparsers)
     subparser_make_per_atom_pull_groups(make_subparsers)
 
