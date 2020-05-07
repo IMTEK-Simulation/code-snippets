@@ -177,18 +177,18 @@ def main():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
     parser.add_argument('--credentials', '-c', help='Config file to read credentials (username and password) from',
-        default=os.path.expanduser('~/.smbcredential.rz_storage'))
+        default=os.path.expanduser('~/.smbcredentials'))
     parser.add_argument('--server_ip', '-i', help='SMB/CIFS Server IP (optional)')
     parser.add_argument('--share', '-s', help='Name of the share"',
         default="pastewka")
     parser.add_argument('--domain', '-d',
-        help='Often "WORKGROUP", here default "PUBLIC"', default="PUBLIC")
+        help='Often "WORKGROUP" or "PUBLIC"', default="WORKGROUP")
     parser.add_argument('--username', '-u',
-        default="pastewka")
+        default="smbuser")
     parser.add_argument('--password', '-p')
     parser.add_argument('--server_name', '-n',
         help='SMB/CIFS Server Name',
-        default="ufr2.isi1.public.ads.uni-freiburg.de")
+        default="localhost")
     parser.add_argument('--server_port', help='Port number, default 445',
         type=int, default=445)
     parser.add_argument('--verbose', '-v', action='store_true',
