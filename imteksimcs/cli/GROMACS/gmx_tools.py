@@ -286,7 +286,7 @@ def optional_arguments_add_pull_groups_to_mdp(parser):
                         help='Pull group names.')
     parser.add_argument('--nsteps','-n',
                         default=add_pull_groups_to_mdp.defaults['k'],
-                        type=float,
+                        type=int,
                         metavar='N', required=False, dest="nsteps",
                         help='Overrides number of steps in .mdp file.')
     parser.add_argument('-k',
