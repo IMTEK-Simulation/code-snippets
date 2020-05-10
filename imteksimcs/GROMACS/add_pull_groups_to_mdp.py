@@ -64,18 +64,18 @@ def add_pull_groups_to_mdp(
 
     N_pull_coords = len(pull_group_names)
 
-    pull_mdp['pull_ncoords']  = N_pull_coords
-    pull_mdp['pull_ngroups']  = N_pull_coords + 1
-    pull_mdp['pull_group1_name'] = reference_group_name # the reference group
+    pull_mdp['pull-ncoords']  = N_pull_coords
+    pull_mdp['pull-ngroups']  = N_pull_coords + 1
+    pull_mdp['pull-group1-name'] = reference_group_name # the reference group
 
     for i, n in enumerate(pull_group_names):
-        pull_mdp["pull_group{:d}_name".format(i+2)]     = n
-        pull_mdp["pull_coord{:d}_type".format(i+1)]     = 'umbrella'  # harmonic potential
-        pull_mdp["pull_coord{:d}_geometry".format(i+1)] = 'distance'  # simple distance increase
-        pull_mdp["pull_coord{:d}_dim".format(i+1)]      = 'Y Y Y'     # pull in all directions
-        pull_mdp["pull_coord{:d}_groups".format(i+1)]   = "1 {:d}".format(i+2) # groups 1 (Chain A) and 2 (Chain B) define the reaction coordinate
-        pull_mdp["pull_coord{:d}_start".format(i+1)]    = 'yes'       # define initial COM distance > 0
-        pull_mdp["pull_coord{:d}_rate".format(i+1)]     = rate        # 0.1 nm per ps = 10 nm per ns
-        pull_mdp["pull_coord{:d}_k".format(i+1)]        = k           # kJ mol^-1 nm^-2
+        pull_mdp["pull-group{:d}-name".format(i+2)]     = n
+        pull_mdp["pull-coord{:d}-type".format(i+1)]     = 'umbrella'  # harmonic potential
+        pull_mdp["pull-coord{:d}-geometry".format(i+1)] = 'distance'  # simple distance increase
+        pull_mdp["pull-coord{:d}-dim".format(i+1)]      = 'Y Y Y'     # pull in all directions
+        pull_mdp["pull-coord{:d}-groups".format(i+1)]   = "1 {:d}".format(i+2) # groups 1 (Chain A) and 2 (Chain B) define the reaction coordinate
+        pull_mdp["pull-coord{:d}-start".format(i+1)]    = 'yes'       # define initial COM distance > 0
+        pull_mdp["pull-coord{:d}-rate".format(i+1)]     = rate        # 0.1 nm per ps = 10 nm per ns
+        pull_mdp["pull-coord{:d}-k".format(i+1)]        = k           # kJ mol^-1 nm^-2
 
     pull_mdp.write(mdpout)
