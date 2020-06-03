@@ -57,9 +57,6 @@ python3-scipy \
 python3-setuptools \
 && rm -rf /var/lib/apt/lists/*
 
-python3 -m pip install $(grep numpy requirements.txt)
-
-python3 -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION} 
 BUILDDIR=/tmp 
 PREFIX=/usr/local
 
