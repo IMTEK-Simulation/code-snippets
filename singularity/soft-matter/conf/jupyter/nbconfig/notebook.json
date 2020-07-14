@@ -1,0 +1,33 @@
+{
+  "load_extensions": {
+    "nbextensions_configurator/config_menu/main": true,
+    "contrib_nbextensions_help_item/main": true,
+    "collapsible_headings/main": true,
+    "equation-numbering/main": true,
+    "freeze/main": true,
+    "highlight_selected_word/main": true,
+    "scratchpad/main": true,
+    "snippets_menu/main": true,
+    "table_beautifier/main": true,
+    "varInspector/main": true,
+    "toggle_all_line_numbers/main": true,
+    "toc2/main": true,
+    "spellchecker/main": false,
+    "snippets/main": true,
+    "scroll_down/main": true,
+    "runtools/main": true,
+    "ruler/main": true,
+    "python-markdown/main": true,
+    "move_selected_cells/main": true,
+    "init_cell/main": true,
+    "highlighter/highlighter": true,
+    "export_embedded/main": true,
+    "execute_time/ExecuteTime": true,
+    "datestamper/main": true,
+    "comment-uncomment/main": true,
+    "codefolding/main": true,
+    "code_prettify/autopep8": true,
+    "code_font_size/code_font_size": true,
+    "latex_envs/latex_envs": true
+  }
+}
