@@ -1,0 +1,34 @@
+Bootstrap: localimage
+From: jupyter_base.sif
+
+%labels
+    Author johannes.hoermann@imtek.uni-freiburg.de
+
+%setup
+    # inject configuration
+    cp -R conf/jupyter ${SINGULARITY_ROOTFS}/jupyter
+
+%post
+    # optional dependencies for certain extensions:
+    python3 -m pip install isort
+    python3 -m pip install autopep8
+
+    # core nbextensions
+    python3 -m pip install jupyter_contrib_nbextensions
+    jupyter contrib nbextension install --system --symlink
+    jupyter nbextensions_configurator enable --system
+
+    # additional nbextensions
+    python3 -m pip install nbresuse
+    python3 -m pip install nbconvert
+
+    cp -R /jupyter/* /usr/local/etc/jupyter/
+    chmod -R g+rw /usr/local/etc/jupyter/
+    chmod -R o+r /usr/local/etc/jupyter/
+    rm -rf /jupyter
+
+%help 
+    singularity run customenv.sif --port=1111
+
+%runscript
+    jupyter notebook --no-browser "$@"

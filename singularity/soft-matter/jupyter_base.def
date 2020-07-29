@@ -1,0 +1,24 @@
+Bootstrap: localimage
+From: openmpi.sif
+
+%labels
+    Author antoine.sanner@imtek.uni-freiburg.de, johannes.hoermann@imtek.uni-freiburg.de
+
+%post
+   export LANG=C.UTF-8
+   export LC_ALL=C.UTF-8
+
+   ## for apt to be noninteractive
+   export DEBIAN_FRONTEND=noninteractive
+   export DEBCONF_NONINTERACTIVE_SEEN=true
+
+   apt-get -qq update && apt-get -y -qq install \
+       python3-pip 
+   python3 -m pip install jupyter
+
+%help 
+singularity run customenv.sif --port=1111
+
+%runscript
+  jupyter notebook --no-browser "$@"
+
