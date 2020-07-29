@@ -8,7 +8,7 @@ from ruamel.yaml import YAML
 
 with open("../README.yml",) as f:
     yaml = YAML()
-    yaml.explicit_start = True
+    yaml.explicit_start = True # ensures the file begins with "---"
     yaml.width = 80
     yaml.indent(mapping=2, sequence=4, offset=2)
     yml = yaml.load(f)
