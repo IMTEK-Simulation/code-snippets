@@ -117,3 +117,10 @@ def main():
         with open(readme_location, "w") as file:
             file.write(readme)
  ````
+
+
+## Integrating dtool in FireWorks workflows
+
+See https://github.com/IMTEK-Simulation/imteksimfw/blob/master/imteksimfw/fireworks/user_objects/firetasks/dtool_tasks.py.
+
+Integration merges workflow metadata into dtool's README.yml and uses same scheme as above for derived datasets, i.e. listing UUIDs of source datasets under field 'derived_from'.
