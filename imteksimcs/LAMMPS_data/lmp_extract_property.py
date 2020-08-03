@@ -9,8 +9,8 @@ import numpy as np
 
 from ovito.io import import_file, export_file
 from ovito.modifiers import CommonNeighborAnalysisModifier
-from ovito.modifiers import SelectParticleTypeModifier, InvertSelectionModifier
-from ovito.modifiers import DeleteSelectedParticlesModifier
+from ovito.modifiers import SelectTypeModifier, InvertSelectionModifier
+from ovito.modifiers import DeleteSelectedModifier
 from ovito.modifiers import LoadTrajectoryModifier
 from ovito.modifiers import CoordinationAnalysisModifier
 
@@ -22,32 +22,15 @@ logger = logging.getLogger(__name__)
 
 def select_fcc_only(pipeline):
     """Deletes all particles not in FCC environment"""
-    # Ovito 3.0.0-dev362 standard:
-    # from ovito.modifiers import CommonNeighborAnalysisModifier
-    # from ovito.modifiers import SelectTypeModifier, InvertSelectionModifier
-    # from ovito.modifiers import DeleteSelectedModifier
-  
-    # neigh_mod = CommonNeighborAnalysisModifier(
-    #   mode = CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff )
-    # sel_mod = SelectTypeModifier( 
-    #  operate_on = "particles",
-    #  property   = "Structure Type",
-    #  types     =  { CommonNeighborAnalysisModifier.Type.FCC } )
-    # inv_mod = InvertSelectionModifier( operate_on = "particles" )
-    # del_mod = DeleteSelectedModifier( operate_on = "particles" )
-  
-    # Ovito 2.9.0 standard:
-    # from ovito.modifiers import CommonNeighborAnalysisModifier
-    # from ovito.modifiers import SelectParticleTypeModifier, InvertSelectionModifier
-    # from ovito.modifiers import DeleteSelectedParticlesModifier
   
     neigh_mod = CommonNeighborAnalysisModifier(
-      mode = CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff )
-    sel_mod = SelectParticleTypeModifier( 
-      property   = "Structure Type",
-      types     =  { CommonNeighborAnalysisModifier.Type.FCC } )
-    inv_mod = InvertSelectionModifier()
-    del_mod = DeleteSelectedParticlesModifier()
+        mode = CommonNeighborAnalysisModifier.Mode.AdaptiveCutoff )
+    sel_mod = SelectTypeModifier( 
+        operate_on = "particles",
+        property   = "Structure Type",
+        types     =  { CommonNeighborAnalysisModifier.Type.FCC } )
+    inv_mod = InvertSelectionModifier(operate_on="particles")
+    del_mod = DeleteSelectedModifier()
   
     pipeline.modifiers.append(neigh_mod)
     pipeline.modifiers.append(sel_mod)
@@ -78,7 +61,7 @@ def extract_rdf(pipeline, frames=[0], cutoff=8.0, number_of_bins=20000):
         total_rdf += data.tables['coordination-rdf'].xy()
 
     # Averaging:
-    total_rdf /= len(frames)
+    total_rdf /= float(len(frames))
 
     return total_rdf
 
