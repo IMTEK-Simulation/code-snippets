@@ -29,7 +29,7 @@
 import sys, logging
 import numpy as np
 
-from imteksimcs.LAMMPS_data.lmp_extract_property import extract_rdf, extract_box_measures, extract_nothing
+from imteksimcs.LAMMPS_data.lmp_extract_property import extract_property, extract_rdf, extract_box_measures, extract_nothing
 from imteksimcs.LAMMPS_data.lmp_extract_property import select_fcc_only
 
 # property keyword - function mapping:
@@ -153,6 +153,7 @@ def main():
 
   logger.info("Expecting atom style '{}'".format(args.style))
 
+  ret = 0
   for i, property in enumerate(args.property):
     if property is not None:
       try:
@@ -165,7 +166,7 @@ def main():
       logger.info("Evaluating with {:s}()...".format(property.__name__))
 
       try:
-        extractProperty( 
+        extract_property( 
           topology_file   = args.topology_file,
           trajectory_file = args.trajectory,
           frames          = args.frames,
@@ -175,9 +176,10 @@ def main():
           atom_style      = args.style)
       except:
         logger.exception("Unhandled exception while processing {:s}()!".format(
-          property.__name__))          
+          property.__name__))
+        ret = 1
 
-  return 0
+  return ret
 
 
 if __name__ == '__main__':
