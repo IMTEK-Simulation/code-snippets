@@ -12,7 +12,7 @@ from ovito.modifiers import CommonNeighborAnalysisModifier
 from ovito.modifiers import SelectParticleTypeModifier, InvertSelectionModifier
 from ovito.modifiers import DeleteSelectedParticlesModifier
 from ovito.modifiers import LoadTrajectoryModifier
-from ovito.modifiers import CoordinationNumberModifier #CoordinationAnalysisModifier
+from ovito.modifiers import CoordinationAnalysisModifier
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +65,7 @@ def extract_rdf(pipeline, frames=[0], cutoff=8.0, number_of_bins=20000):
     """Returns M x 1 array of RDF averaged over N frames, where N = len(frames)
        and M = number_of_bins"""
     # Insert the modifier into the pipeline:
-    # rdf_mod = CoordinationAnalysisModifier(cutoff = 8.0, number_of_bins = 20000)
-    rdf_mod = CoordinationNumberModifier(cutoff=8.0, number_of_bins=20000)
+    rdf_mod = CoordinationAnalysisModifier(cutoff = 8.0, number_of_bins = 20000)
     pipeline.modifiers.append(rdf_mod)
 
     # Initialize array for accumulated RDF histogram to zero:
@@ -76,8 +75,7 @@ def extract_rdf(pipeline, frames=[0], cutoff=8.0, number_of_bins=20000):
         # Evaluate pipeline to let the modifier compute the RDF of the current frame:
         data = pipeline.compute(frame)
         # Accumulate RDF histograms:
-        # total_rdf += data.series['coordination-rdf'].as_table()
-        total_rdf += rdf_mod.rdf
+        total_rdf += data.tables['coordination-rdf'].xy()
 
     # Averaging:
     total_rdf /= len(frames)
