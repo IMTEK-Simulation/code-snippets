@@ -22,7 +22,43 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
-"""Run an MPI-parallel function via mpi4py's distribution mechanism."""
+"""Run an MPI-parallel function via mpi4py's distribution mechanism.
+
+Example
+-------
+
+Test script `test.py` with content
+
+    import logging
+    from imteksimcs.mpi4py.mpi_pool_executor import call, sample_func
+
+    if __name__ == '__main__':
+        logging.basicConfig(level=logging.INFO)
+        call(sample_func)
+
+evoked via
+
+     mpirun -np 4 python -m mpi4py.futures tes.py
+
+will produce the following output
+
+    Hello from rank 0/4.
+    Hello from rank 3/4.
+    Hello from rank 2/4.
+    Hello from rank 1/4.
+    Gathered [1, 4, 9, 16]
+    We got the magic number 30
+
+Another more meaningful example is the embarassingly parallel computation of
+RDFs with
+
+    from imteksimcs.mpi4py.mpi_pool_executor import call
+    from imteksimcs.GROMACS.gmx_mpi_rdf import atom_atom_rdf
+
+    if __name__ == '__main__':
+        call(atom_atom_rdf, gro='default.gro', trr='default.trr',
+             out='OW_NA_rdf_parallel.txt', atom_name_a='OW', atom_name_b='NA')
+"""
 from mpi4py import MPI
 from mpi4py.futures import MPIPoolExecutor
 import numpy as np
@@ -45,7 +81,7 @@ def sample_func():
 
 
 def call(func, *args, **kwargs):
-    """Distribute function call to MPI processes via mpi4py.futures serialization/deserialization mechanisum."""
+    """Distribute function call to MPI processes via mpi4py.futures serialization/deserialization mechanism."""
     logger = logging.getLogger(__name__)
     comm = MPI.COMM_WORLD
 
@@ -59,9 +95,9 @@ def call(func, *args, **kwargs):
         logger.debug("MPI universe size is: %s" % universe_size)
 
         # distribute payload to rank 1 to MPI_UNIVERSE_SIZE
-        jobs = [executor.submit(work, *args, **kwargs) for _ in range(universe_size-1)]
+        jobs = [executor.submit(func, *args, **kwargs) for _ in range(size-1)]
         # also run payload on rank 0
-        data = work(*args, **kwargs)
+        data = func(*args, **kwargs)
 
     # function may have return value on rank 0
     if data is not None:
