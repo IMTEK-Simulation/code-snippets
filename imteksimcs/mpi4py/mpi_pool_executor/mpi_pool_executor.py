@@ -38,7 +38,7 @@ Test script `test.py` with content
 
 evoked via
 
-     mpirun -np 4 python -m mpi4py.futures tes.py
+     mpirun -np 4 python -m mpi4py.futures test.py
 
 will produce the following output
 
