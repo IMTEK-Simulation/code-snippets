@@ -79,25 +79,42 @@ def atom_rmsd(gro, trr, out, atom_name='AU', **kwargs):
 
     rmsd_atom_group = mda_rms.RMSD(atom_group, ref_frame=0, **kwargs)
 
+    # in the standard case #ranks > #frames,
     N = len(mda_trr.trajectory)
-    n1 = rank*(N//size)
-    n2 = (rank+1)*(N//size)
-    if rank == size-1:  # treatment for last rank if N >= size
+    span = N//size
+
+    # special treatment for more ranks than frames
+    if span < 1:  # less frames than ranks
+        span = 1
+
+    n1 = rank*span
+    n2 = (rank+1)*span
+
+    if rank >= size:  # treatment for rank > size
+        n1 = 0
+        n2 = 0
+        # in this case, just return empty time_resolved_rdf
+    elif rank == size-1:  # treatment for last rank if N >= size
         n2 = N
 
-    logger.info("RMSD for frame %i to %i." % (n1, n2))
-    rmsd_atom_group.run(start=n1, stop=n2)
-
+    if n2 > n1:
+        logger.info("RMSD for frame %i to %i." % (n1, n2))
+        rmsd_atom_group.run(start=n1, stop=n2)
+        data = rmsd_atom_group.rmsd[:, 1:]  # time and rmsd in column vectors
+    else:
+        data = np.array()
     # format of rmsd:
     # rmsdT = rmsd_atom_group.rmsd.T
     # frame = rmsdT[0]
     # time = rmsdT[1]
     # rmsd = rmsdT[2]
 
-    data = rmsd_atom_group.rmsd[:, 1:]  # time and rmsd in column vectors
+
     data_list = comm.gather(data, root=0)
     if rank == 0:
-        data = np.vstack(data_list)
+        filtered_data_list = [l for l in data_list if len(l) > 0]
+
+        data = np.vstack(filtered_data_list)
         np.savetxt(out, data, fmt='%.8e',
             header='\n'.join((
                 '{modulename:s}, {username:s}@{hostname:s}, {timestamp:s}'.format(

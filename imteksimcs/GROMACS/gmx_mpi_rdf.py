@@ -82,17 +82,27 @@ def atom_atom_rdf(
     atom_group_a = mda_trr.atoms[mda_trr.atoms.names == atom_name_a]
     atom_group_b = mda_trr.atoms[mda_trr.atoms.names == atom_name_b]
 
-    time_resolved_rdf = []
-
-    # this assignment is problematic if there are more ranks than data
+    # in the standard case #ranks > #frames,
     N = len(mda_trr.trajectory)
-    n1 = rank*(N//size)
-    n2 = (rank+1)*(N//size)
-    if rank == size-1:  # treatment for last rank if N >= size
+    span = N//size
+
+    # special treatment for more ranks than frames
+    if span < 1:  # less frames than ranks
+        span = 1
+
+    n1 = rank*span
+    n2 = (rank+1)*span
+
+    if rank >= size:  # treatment for rank > size
+        n1 = 0
+        n2 = 0
+        # in this case, just return empty time_resolved_rdf
+    elif rank == size-1:  # treatment for last rank if N >= size
         n2 = N
 
     logger.info("RDF for frame %i to %i." % (n1, n2))
 
+    time_resolved_rdf = []
     for i in range(n1, n2):
         rdf = mda_rdf.InterRDF(
             atom_group_a, atom_group_b, range=interval, **kwargs)
@@ -107,7 +117,9 @@ def atom_atom_rdf(
     # gathers list of arrays at rank 0
     time_resolved_rdf_list = comm.gather(time_resolved_rdf, root=0)
     if rank == 0:
-        time_resolved_rdf = np.vstack(time_resolved_rdf_list)
+        # sort out empty frames
+        filtered_time_resolved_rdf_list = [l for l in time_resolved_rdf_list if len(l) > 0]
+        time_resolved_rdf = np.vstack(filtered_time_resolved_rdf_list)
         # write file
         # 1st dim is time (frame), 2nd dim is bin
         bins = rdf.bins.copy()
