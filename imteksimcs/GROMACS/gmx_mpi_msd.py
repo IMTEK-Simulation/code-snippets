@@ -90,7 +90,7 @@ def atom_rmsd(gro, trr, out, atom_name='AU', **kwargs):
     n1 = rank*span
     n2 = (rank+1)*span
 
-    if rank >= size:  # treatment for rank > size
+    if rank >= N:  # treatment for rank > N
         n1 = 0
         n2 = 0
         # in this case, just return empty time_resolved_rdf
@@ -102,7 +102,7 @@ def atom_rmsd(gro, trr, out, atom_name='AU', **kwargs):
         rmsd_atom_group.run(start=n1, stop=n2)
         data = rmsd_atom_group.rmsd[:, 1:]  # time and rmsd in column vectors
     else:
-        data = np.array()
+        data = np.array([])
     # format of rmsd:
     # rmsdT = rmsd_atom_group.rmsd.T
     # frame = rmsdT[0]

@@ -93,7 +93,7 @@ def atom_atom_rdf(
     n1 = rank*span
     n2 = (rank+1)*span
 
-    if rank >= size:  # treatment for rank > size
+    if rank >= N:  # treatment for rank > N
         n1 = 0
         n2 = 0
         # in this case, just return empty time_resolved_rdf
