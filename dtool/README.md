@@ -118,6 +118,27 @@ def main():
             file.write(readme)
  ````
 
+## Accessing dataset readme from python.
+You can access directly from isilon. So you only need to know th uuid.
+
+```python
+yaml = YAML()
+dataset = DataSet.from_uri(f"smb://isilon/{uuid}")
+yml = yaml.load(dataset.get_readme_content())
+```
+
+## Accessing dataset items: 
+
+
+```python
+def get_item_abspath(dataset, relpath):
+    for identifier, properties in dataset.generate_manifest()["items"].items():
+        if properties["relpath"] == relpath:
+            return dataset.item_content_abspath(identifier)
+    return False
+``` 
+
+
 
 ## Integrating dtool in FireWorks workflows
 
