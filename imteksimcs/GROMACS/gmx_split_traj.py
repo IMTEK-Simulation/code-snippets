@@ -52,7 +52,9 @@ def get_traj_length(traj_file="default.xtc"):
 
 def get_chunk_length(N, size):
     span = N//size
-    if N % span != 0:
+    if span < 1:
+        span = 1
+    elif N % span != 0:
         span += 1
     return span
 
