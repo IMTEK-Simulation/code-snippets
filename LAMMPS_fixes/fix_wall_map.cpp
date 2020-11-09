@@ -274,11 +274,6 @@ FixWallMap::FixWallMap(LAMMPS *lmp, int narg, char **arg) :
     double yprd = domain->yprd;
     int mx = 128;
     int my = 128;
-    //char fn[10240];
-    //sprintf(fn, "map-raw-%i.dump", comm->me);
-    //write_map(fn);
-    //sprintf(fn, "map-%i.dump", comm->me);
-    //FILE *f = fopen(fn, "w");
     FILE *f = fopen("map.dump", "w");
     for (int i = 0; i < mx; i++) {
       for (int j = 0; j < my; j++) {
