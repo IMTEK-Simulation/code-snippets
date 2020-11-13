@@ -1360,8 +1360,8 @@ void FixWallMap::eval_table2d(double x, double y, double &f,
 				 double &d2fdxdx, double &d2fdydy,
 				 double &d2fdxdy)
 {
-  double rx = x*qx_;
-  double ry = y*qy_;
+  double rx = (x-x0_)*qx_;
+  double ry = (y-y0_)*qy_;
 
   map_->eval(rx, ry, f, dfdx, dfdy, d2fdxdx, d2fdydy, d2fdxdy);
 
