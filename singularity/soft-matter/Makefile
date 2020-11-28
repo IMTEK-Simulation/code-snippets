@@ -18,6 +18,9 @@ jupyter_nbextensions.sif: jupyter_base.sif
 jupyter_imteksim_jotelha.sif: jupyter_nbextensions.sif
     sudo -E singularity build jupyter_imteksim_jotelha.sif jupyter_imteksim_jotelha.def
 
+jupyter_with_gromacs_imteksim.sif: jupyter_imteksim_jotelha.sif
+    sudo -E singularity build jupyter_with_gromacs_imteksim.sif jupyter_with_gromacs_imteksim.def
+
 .PHONY: clean
 clean:
     rm -f $(sif)

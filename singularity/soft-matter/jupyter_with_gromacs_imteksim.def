@@ -1,0 +1,33 @@
+Bootstrap: localimage
+From: jupyter_imteksim_jotelha.sif
+
+%labels
+    Author johannes.hoermann@imtek.uni-freiburg.de
+
+%files
+    gmx_top.tar.gz /gmx_top.tar.gz
+    
+%environment
+    GMXLIB=/top
+    export GMXLIB
+
+%post
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+
+    ## for apt to be noninteractive
+    export DEBIAN_FRONTEND=noninteractive
+    export DEBCONF_NONINTERACTIVE_SEEN=true
+
+    apt-get -qq update && apt-get -y -qq install git gromacs
+
+    cd /
+    tar xf gmx_top.tar.gz
+    rm gmx_top.tar.gz
+    
+%help 
+singularity run image.sif --port=1111
+
+%runscript
+  jupyter notebook --no-browser "$@"
+
