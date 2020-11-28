@@ -8,20 +8,27 @@ From: jupyter_nbextensions.sif
    conf/python/requirements.txt /requirements.txt
 
 %post
+   # requirements for pycairo
+   apt install -y pkg-config libcairo2 libcairo2-dev
+
+   # requirements for PyGObject
+   apt install -y libgirepository1.0-dev
+
+
    python3 -m pip install -r /requirements.txt
    # custom installations    
    # current master branch
    python3 -m pip install https://gitlab.com/ase/ase/repository/archive.tgz
 
-   # v1.9.5 mod branch
-   python3 -m pip install https://github.com/jotelha/fireworks/archive/v1.9.5-mod.tar.gz
+   # v1.9.6 mod branch
+   python3 -m pip install https://github.com/jotelha/fireworks/archive/v1.9.6-mod.tar.gz
 
    # current master branch
-   python3 -m pip install https://github.com/IMTEK-Simulation/imteksimfw/archive/master.tar.gz
+   # python3 -m pip install https://github.com/IMTEK-Simulation/imteksimfw/archive/master.tar.gz
    python3 -m pip install https://github.com/IMTEK-Simulation/code-snippets/archive/master.tar.gz
 
    # CLI branch
-   python3 -m pip install https://github.com/jotelha/matscipy/archive/cli.tar.gz
+   # python3 -m pip install https://github.com/jotelha/matscipy/archive/cli.tar.gz
 
 
 %help 

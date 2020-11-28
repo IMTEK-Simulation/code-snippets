@@ -18,9 +18,16 @@ From: jupyter_base.sif
     jupyter contrib nbextension install --system --symlink
     jupyter nbextensions_configurator enable --system
 
+    # enable certain extensions
+    jupyter nbextension enable equation-numbering/main
+
     # additional nbextensions
     python3 -m pip install nbresuse
     python3 -m pip install nbconvert
+
+    # tikz
+    apt -y install git pdf2svg
+    python3 -m pip install git+git://github.com/mkrphys/ipython-tikzmagic.git
 
     cp -R /jupyter/* /usr/local/etc/jupyter/
     chmod -R g+rw /usr/local/etc/jupyter/
