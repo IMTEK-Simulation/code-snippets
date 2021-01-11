@@ -138,6 +138,30 @@ def get_item_abspath(dataset, relpath):
     return False
 ``` 
 
+## rapidly extract all uuids used in a file (assuming they are all hardcoded)
+
+```python
+import re
+
+uuids = []
+UUID_v4_REGEX = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}'
+with open('my_postprocessing_file.py') as myfile:
+    for line in myfile.readlines():
+        result = re.search(UUID_v4_REGEX, line)
+        if result is not None:
+            print(line)
+            uuids.append(result.group())
+
+print('UUIDS: ', uuids)
+
+out = "derived_from:\n"
+
+for s in uuids:
+    out+="  - uuid: " + s + "\n"
+
+print(out)
+```
+
 
 
 ## Integrating dtool in FireWorks workflows
