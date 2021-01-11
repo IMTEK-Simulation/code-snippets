@@ -68,8 +68,11 @@ def main():
                              "'NETCDF4_CLASSIC' and 'NETCDF4'",
                         metavar='KIND')
     parser.add_argument('-x', '--exclude', dest='exclude',
-                        help='exclude variables EXCLUDE (comman separated list) '
-                             'from being written to the output file',
+                        nargs='?', const=None, default='id',
+                        help="exclude variables EXCLUDE (comman separated list) "
+                             "from being written to the output file (default: "
+                             "EXCLUDE='id'). Specify --exclude without any "
+                             "following argument to exclude nothing.",
                         metavar='EXCLUDE')
     parser.add_argument('-i', '--index', dest='index', default='id',
                         help="variable INDEX contains particle ids (default: "
@@ -80,6 +83,11 @@ def main():
                         help='OFFSET will be added to particle id to get zero-based'
                              ' particle index (default: OFFSET=-1)',
                         metavar='OFFSET')
+    parser.add_argument('-f', '--outfile-name', dest='outfile_name',
+                    default="traj.nc",
+                    help="resulting netcdf written to OUTFILE (default: "
+                         "OUTFILE='traj.nc')",
+                    metavar='OUTFILE')
     arguments = parser.parse_args()
     if ',' in arguments.test_tol:
         arguments.test_tol = np.array([float(x) for x in arguments.test_tol.split(',')])
@@ -87,14 +95,14 @@ def main():
         arguments.test_tol = float(arguments.test_tol)
     print('every =', arguments.every, ', test_var =', arguments.test_var, \
           ', test_tol =', arguments.test_tol, ', exclude =', arguments.exclude, \
-          ', index =', arguments.index, ', index_offset =', arguments.index_offset)
+          ', index =', arguments.index, ', index_offset =', arguments.index_offset, \
+          ', outfile_name =', arguments.outfile_name)
 
 
     ### Sanity check
 
-    if os.path.exists('traj.nc'):
-        raise RuntimeError('traj.nc exists already.')
-
+    if os.path.exists(arguments.outfile_name):
+        raise RuntimeError('{:s} exists already.'.format(arguments.outfile_name))
 
     ### Open input files and filter if requested
 
@@ -113,7 +121,8 @@ def main():
 
 
     # Create output file
-    odata = Dataset('traj.nc', 'w', clobber=False, format=arguments.netcdf_format)
+    odata = Dataset(arguments.outfile_name, 'w', clobber=False,
+                    format=arguments.netcdf_format)
 
 
     ### Copy global attributes
@@ -125,7 +134,7 @@ def main():
 
     ### Prepare exclude list
 
-    exclude_list = set([arguments.index])
+    exclude_list = set()
     if arguments.exclude is not None:
         exclude_list = exclude_list.union(set(arguments.exclude.split(',')))
 
