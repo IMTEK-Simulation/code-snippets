@@ -68,8 +68,11 @@ def main():
                              "'NETCDF4_CLASSIC' and 'NETCDF4'",
                         metavar='KIND')
     parser.add_argument('-x', '--exclude', dest='exclude',
-                        help='exclude variables EXCLUDE (comman separated list) '
-                             'from being written to the output file',
+                        nargs='?', const=None, default='id',
+                        help="exclude variables EXCLUDE (comman separated list) "
+                             "from being written to the output file (default: "
+                             "EXCLUDE='id'). Specify --exclude without any "
+                             "following argument to exclude nothing.",
                         metavar='EXCLUDE')
     parser.add_argument('-i', '--index', dest='index', default='id',
                         help="variable INDEX contains particle ids (default: "
@@ -125,7 +128,7 @@ def main():
 
     ### Prepare exclude list
 
-    exclude_list = set([arguments.index])
+    exclude_list = set()
     if arguments.exclude is not None:
         exclude_list = exclude_list.union(set(arguments.exclude.split(',')))
 
