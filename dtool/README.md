@@ -64,7 +64,8 @@ Creation and expiration date are determined automatically from the name of the d
 in ISO-format, e.g. `dtool create $(date -I)_some_dataset; python create_dtool_readme.py $(date -I)_some_dataset`. The 
 UUID from which the dataset is derived can be specified using the optional `-u` argument.
 
-```#!/usr/bin/env python
+```python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """Create dtool README files based on a template"""
 from string import Template
