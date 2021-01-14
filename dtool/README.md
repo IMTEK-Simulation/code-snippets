@@ -139,6 +139,93 @@ def get_item_abspath(dataset, relpath):
     return False
 ``` 
 
+## Manage datasets in python
+
+Here is an example where I wanted to rerun a bunch of short simulations with slightly different parameters. I hence automatized the logistics using dtool. 
+
+```python
+import subprocess
+
+from dtoolcore import DataSet
+import dtoolcore
+
+from dtool_create.dataset import _get_readme_template
+from ruamel.yaml import YAML
+from datetime import date
+from simulation_base import directory_name
+from dtoolcore import create_proto_dataset
+import io
+import os
+from dtoolcore.storagebroker import _get_abspath_from_uri
+
+uris="""ecs://simdata/lasdjfhadjksfgjadhsfas
+ecs://simdata/kladsfhdfskhdfsdfsadfsh"""
+
+uris = uris.split("\n")
+
+def get_item_abspath(dataset, relpath):
+    if isinstance(dataset, str):
+        dataset =  DataSet.from_uri(f"ecs://simdata/{dataset}")
+        
+    for identifier, properties in dataset.generate_manifest()["items"].items():
+        if properties["relpath"] == relpath:
+            return dataset.item_content_abspath(identifier)
+    return False
+
+# Open the readme template. if fpath is not specified it will find the standard (or last) readme template
+readme_template = _get_readme_template(fpath=os.path.dirname(__file__) + "/dtool_readme.yml")
+yaml = YAML()
+yaml.explicit_start = True
+yaml.indent(mapping=2, sequence=4, offset=2)
+
+for uri in uris:
+
+    # load the parameters from an existing dataset
+    print(f"base dataset: {uri}")
+    descriptive_metadata = yaml.load(readme_template)
+
+    dataset = DataSet.from_uri(uri)
+
+    parameters = yaml.load(dataset.get_readme_content())["parameters"]
+    
+    # modify them slightly
+    parameters.update(dict(param1=6, param2=12, dump_fields=False))
+    descriptive_metadata.update(dict(parameters=parameters))
+    readme_stream = io.StringIO()
+    yaml.dump(descriptive_metadata, readme_stream)
+    readme = readme_stream.getvalue()
+    
+    # create dataset. This creates the directory
+    dataset = create_proto_dataset(
+        directory_name(parameters),
+        ".",
+        readme_content=readme
+    )
+
+    # Do the simulation 
+    
+    abspath = _get_abspath_from_uri(dataset.uri)
+    errcode = subprocess.call(
+        f"python3 simulation_base.py --simulate_dataset {abspath} "
+        f"> {abspath}/data/stdout 2> {abspath}/data/stderr", shell=True)
+
+    assert errcode == 0
+    
+    # Freeze and upload the simulation
+    dataset.freeze()
+    
+    new_uri = dtoolcore.copy(dataset.uri, "ecs://simdata/")
+    print(f"pushed: {new_uri}")
+    
+    # Delete local copy
+    if True:
+        errcode = subprocess.call(f"rm -rf {abspath}", shell=True)
+        if errcode == 0:
+            print("deletion succeeded")
+        else:
+            print(f"could not delete {abspath}")
+```
+
 ## rapidly extract all uuids used in a file (assuming they are all hardcoded)
 
 ```python
