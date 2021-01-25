@@ -139,6 +139,31 @@ def get_item_abspath(dataset, relpath):
     return False
 ``` 
 
+## Select datasets with a query and extract some information into a pandas dataframe: 
+
+```python
+async def collect_data_from_query(query, verbose=False):
+    res = await dl.query(query)
+    ds = []
+    for uri in pd.DataFrame(res).uri.to_list():
+        try: 
+            yaml = YAML()
+            print(f"processing {uri}")
+            dataset = dtoolcore.DataSet.from_uri(uri.replace("smb://as1412", "smb://isilon"))
+            yml = yaml.load(dataset.get_readme_content())
+            # see https://dtoolcore.readthedocs.io/en/latest/descriptive.html#working-with-items-in-a-dataset
+            d = dict(yml["parameters"])
+            d.update(yml["results"])
+            d.update(uuid=dataset.uuid,
+                     uri=dataset.uri)
+            ds.append(d)
+        except Exception as err: 
+            print(f"uri: {uri}, error: {err}")
+    df = pd.DataFrame(ds)
+    df.set_index("uuid")
+    return df
+```
+
 ## Manage datasets in python
 
 Here is an example where I wanted to rerun a bunch of short simulations with slightly different parameters. I hence automatized the logistics using dtool. 
