@@ -1,0 +1,11 @@
+Build .sif image with
+
+  singularity build fenics_and_gmsh.sif fenics_and_gmsh.def
+
+and run with 
+
+  singularity run fenics_and_gmsh.sif
+
+to launch a jupyter notebook instance. Bring up by displayed toke link.
+
+

@@ -1,0 +1,30 @@
+
+Bootstrap: docker
+From: quay.io/fenicsproject/stable:latest
+
+# see https://fenics.readthedocs.io/projects/containers/en/latest/introduction.html#running-fenics-in-docker
+
+%labels
+    Author johannes.hoermann@imtek.uni-freiburg.de
+
+
+%post 
+
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
+
+## for apt to be noninteractive
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+apt-get -qq update && apt-get -y -qq install \
+    python3-pip \
+    gmsh && \
+  python3 -m pip install meshio matscipy[cli,fenics] && \
+  rm -rf /var/lib/apt/lists/*
+
+%help 
+singularity run fenics_and_gmsh.sif --port=8888
+
+%runscript
+  jupyter notebook --no-browser "$@"   
