@@ -4,7 +4,11 @@ This repository contains a random collection of code snippets for pre- and
 postprocessing simulation runs with Ovito, ASE and other tools.
 
 Note that some parts of the repository below `imteksimcs` installable as a
-python package.
+python package. Install with
+
+```
+pip install --user git+https://github.com/IMTEK-Simulation/code-snippets.git
+```
 
 Please categorize additions as follows:
 
