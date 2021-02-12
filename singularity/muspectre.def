@@ -29,7 +29,8 @@ From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-9_ubuntu-18.sif
     cd $MUSPECTRE_DIR/muSpectre
     python3 -m pip install -r requirements.txt
     cd build
-    cmake -DCMAKE_BUILD_TYPE=Release -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
+    # NEMO is Sandy Bridge
+    cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE="-O2 -march=sandybridge -mno-avx512f" -DCMAKE_CXX_FLAGS_RELEASE="-O2 -march=sandybridge -mno-avx512f" -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
     make -j 4
 
 %environment
