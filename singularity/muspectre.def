@@ -1,7 +1,8 @@
 Bootstrap: localimage
-From: pnetcdf_openmpi-4.0.2_gcc-9_ubuntu-18.sif 
+From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-9_ubuntu-18.sif
 
 %post
+
     # Paths to the compiled netcdf, pnetcdf file
     BUILDDIR=/tmp
     PREFIX=/usr/local
@@ -13,55 +14,29 @@ From: pnetcdf_openmpi-4.0.2_gcc-9_ubuntu-18.sif
 
     # env variables from openmpi for runtime
     export OMPI_DIR=/opt/ompi
-    export SINGULARITY_OMPI_DIR=$OMPI_DIR
-    export SINGULARITYENV_APPEND_PATH=$OMPI_DIR/bin
-    export SINGULARITYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib
 
     # Set env variables for build 
     export PATH=$OMPI_DIR/bin:$PATH
-    export LD_LIBRARY_PATH=$OMPI_DIR/lib:$LD_LIBRARY_PATH
+    export CPATH=$OMPI_DIR/include:/usr/local/include:$CPATH
+    export LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/lib:$LIBRARY_PATH
+    export LD_RUN_PATH=$OMPI_DIR/lib:/usr/local/lib:$LD_RUN_PATH
     export MANPATH=$OMPI_DIR/share/man:$MANPATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
 
-    # 
-    export LANG=C.UTF-8
-    export LC_ALL=C.UTF-8
-
-    ## for apt to be noninteractive
-    export DEBIAN_FRONTEND=noninteractive
-    export DEBCONF_NONINTERACTIVE_SEEN=true
-    export MPI4PY_VERSION=3.0.3 
-    export HDF5_VERSION=1.10.6 
-    export PNETCDF_VERSION=1.12.1 
-    export NETCDF4_VERSION=4.7.3 
-    export NETCDF4_PYTHON_VERSION=1.5.3
-    
-    # Install Python packages
-    python3 -m pip install --upgrade pip
-    python3 -m pip install pytest
-    python3 -m pip install numpy 
-    python3 -m pip install scipy 
-    python3 -m pip install mpi4py 
-
-    # Install LAMMPS 
+    # Install LAMMPS
     export MUSPECTRE_DIR=/opt
     git clone -b merge/21_projection_generalization https://gitlab.com/muspectre/muspectre.git $MUSPECTRE_DIR/muSpectre
     cd $MUSPECTRE_DIR/muSpectre
-    mkdir build
-    cd build 
+    python3 -m pip install -r requirements.txt
+    cd build
     cmake -DCMAKE_BUILD_TYPE=Release -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
+    make -j 4
 
 %environment
+
     # Variables to be used at runtime 
-    export LANG=C.UTF-8
-    export LC_ALL=C.UTF-8
-    export OMPI_DIR=/opt/ompi
-    export SINGULARITY_OMPI_DIR=$OMPI_DIR
-    export SINGULARITYENV_APPEND_PATH=$OMPI_DIR/bin
-    export SINGULARITYENV_APPEND_LD_LIBARY_PATH=$OMPI_DIR/lib
-    export SINGULARITYENV_APPEND_LD_LIBARY_PATH=/usr/local/lib
-    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=/opt/lammps/src:$LD_LIBRARY_PATH
     export PYTHONPATH=/opt/muSpectre/build/language_bindings/libmugrid/python:/opt/muSpectre/build/language_bindings/libmufft/python:/opt/muSpectre/build/language_bindings/python:$PYTHONPATH
 
 %runscript 
+
     python3 "$@"
