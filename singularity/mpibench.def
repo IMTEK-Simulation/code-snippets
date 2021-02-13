@@ -1,0 +1,30 @@
+Bootstrap: localimage
+
+From: openmpi_4.0.2-gcc-9_ubuntu-18.sif
+
+%post
+
+    # env variables from specific compiler 
+    export CXX=/usr/bin/g++-9   
+    export CC=/usr/bin/gcc-9
+    export FC=/usr/bin/gfortran-9
+
+    ## env variables from openmpi
+
+    # Env for runtime
+    export OMPI_DIR=/opt/ompi
+
+    # Set env variables so we can compile our application
+    export PATH=$OMPI_DIR/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$OMPI_DIR/lib:$LD_RUN_PATH
+    export MANPATH=$OMPI_DIR/share/man:$MANPATH
+
+    # Clone and compile MPI benchmark
+    cd /opt
+    git clone https://github.com/LLNL/mpiBench.git
+    cd mpiBench
+    make
+
+%runscript
+
+    /opt/mpiBench/mpiBench "$@"

@@ -31,7 +31,6 @@ From: openmpi_4.0.2-gcc-9_ubuntu-18.sif
     apt-get -qq update
     apt-get -y -qq install \
     cmake \
-    curl \
     git \
     libboost-test-dev \
     libcurl4-openssl-dev \
