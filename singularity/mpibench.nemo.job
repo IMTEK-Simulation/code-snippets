@@ -1,0 +1,21 @@
+#MSUB -l nodes=1:ppn=2
+#MSUB -l walltime=00:15:00
+#MSUB -l pmem=1000mb
+#MSUB -q express
+#MSUB -m bea
+
+set -e
+
+ml system/modules/testing
+ml mpi/openmpi/4.0-gnu-9.2
+ml tools/singularity/3.5
+
+cd $MOAB_SUBMITDIR
+
+# Run in container
+mpirun -n $PBS_NP singularity run mpibench.sif > bench.singularity.$PBS_NP
+
+# Run on host system
+mpirun -n $PBS_NP mpiBench/mpiBench > bench.no_singularity.$PBS_NP
+mpirun --mca pml ^ucx -n $PBS_NP mpiBench/mpiBench > bench.no_singularity.no_ucx.$PBS_NP
+

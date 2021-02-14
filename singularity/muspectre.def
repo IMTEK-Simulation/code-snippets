@@ -1,32 +1,13 @@
 Bootstrap: localimage
-From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-9_ubuntu-18.sif
+From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-7_ubuntu-18.sif
 
 %post
 
-    # Paths to the compiled netcdf, pnetcdf file
-    BUILDDIR=/tmp
-    PREFIX=/usr/local
-
-    # env variables from specific compiler
-    export CXX=/usr/bin/g++-9
-    export CC=/usr/bin/gcc-9
-    export FC=/usr/bin/gfortran-9
-
-    # env variables from openmpi for runtime
-    export OMPI_DIR=/opt/ompi
-
-    # Set env variables for build 
-    export PATH=$OMPI_DIR/bin:$PATH
-    export CPATH=$OMPI_DIR/include:/usr/local/include:$CPATH
-    export LIBRARY_PATH=$OMPI_DIR/lib:/usr/local/lib:$LIBRARY_PATH
-    export LD_RUN_PATH=$OMPI_DIR/lib:/usr/local/lib:$LD_RUN_PATH
-    export MANPATH=$OMPI_DIR/share/man:$MANPATH
-    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
-
-    # Install LAMMPS
-    export MUSPECTRE_DIR=/opt
-    git clone -b merge/21_projection_generalization https://gitlab.com/muspectre/muspectre.git $MUSPECTRE_DIR/muSpectre
-    cd $MUSPECTRE_DIR/muSpectre
+    # Install muSpectre
+    export MUSPECTRE_DIR=/opt/muSpectre
+    export MUSPECTRE_BRANCH=merge/21_even_grid_points
+    git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git ${MUSPECTRE_DIR}
+    cd ${MUSPECTRE_DIR}
     python3 -m pip install -r requirements.txt
     cd build
     # NEMO is Sandy Bridge
@@ -36,7 +17,8 @@ From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-9_ubuntu-18.sif
 %environment
 
     # Variables to be used at runtime 
-    export PYTHONPATH=/opt/muSpectre/build/language_bindings/libmugrid/python:/opt/muSpectre/build/language_bindings/libmufft/python:/opt/muSpectre/build/language_bindings/python:$PYTHONPATH
+    export MUSPECTRE_DIR=/opt/muSpectre
+    export PYTHONPATH=${MUSPECTRE_DIR}/build/language_bindings/libmugrid/python:${MUSPECTRE_DIR}/build/language_bindings/libmufft/python:${MUSPECTRE_DIR}/build/language_bindings/python:$PYTHONPATH
 
 %runscript 
 
