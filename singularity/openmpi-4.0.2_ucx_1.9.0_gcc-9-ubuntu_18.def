@@ -3,7 +3,7 @@ From: ubuntu:18.04
 
 %post
 
-	export UCX_VERSION=1.5.2 # like NEMO
+	export UCX_VERSION=1.9.0
     export UCX_DIR=/opt/ucx
     export OMPI_VERSION=4.0.2 # like NEMO
     export OMPI_DIR=/opt/ompi
@@ -18,23 +18,20 @@ From: ubuntu:18.04
     apt install -y software-properties-common libnuma-dev curl
     add-apt-repository -y ppa:ubuntu-toolchain-r/test
 
-    apt-get install -y wget git bash gcc-9 gfortran-9 g++-9 make file
-    export CXX=/usr/bin/g++-9
+    apt-get install -y wget git bash make file gcc-9 gfortran-9 g++-9
     export CC=/usr/bin/gcc-9
+    export CXX=/usr/bin/g++-9
     export FC=/usr/bin/gfortran-9
 
-    curl -L https://github.com/openucx/ucx/releases/download/v${UCX_VERSION}/ucx-${UCX_VERSION}.tar.gz | tar -xzC /tmp
-    cd /tmp/ucx-${UCX_VERSION} && ./configure --prefix=${UCX_DIR} && make install
+    export LD_RUN_PATH=${UCX_DIR}/lib
 
-    export OMPI_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OMPI_VERSION.tar.bz2"
-    mkdir -p /tmp/ompi
-    mkdir -p /opt
+    # Download, compile and install UCX
+    curl -L https://github.com/openucx/ucx/releases/download/v${UCX_VERSION}/ucx-${UCX_VERSION}.tar.gz | tar -xzC /tmp &&
+        cd /tmp/ucx-${UCX_VERSION} && ./configure --prefix=${UCX_DIR} && make install
 
-    # Download
-    cd /tmp/ompi && wget -O openmpi-$OMPI_VERSION.tar.bz2 $OMPI_URL && tar -xjf openmpi-$OMPI_VERSION.tar.bz2
-
-    # Compile and install
-    cd /tmp/ompi/openmpi-$OMPI_VERSION && ./configure --prefix=$OMPI_DIR --with-ucx=${UCX_DIR} && make install
+    # Download, compile and install OpenMPI
+    curl -L https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OMPI_VERSION.tar.bz2 | tar -xjC /tmp &&
+      cd /tmp/openmpi-$OMPI_VERSION && ./configure --prefix=$OMPI_DIR --with-ucx=${UCX_DIR} && make install
 
 %environment
 

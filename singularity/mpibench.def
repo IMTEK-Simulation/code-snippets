@@ -1,13 +1,13 @@
 Bootstrap: localimage
 
-From: openmpi_4.0.2-gcc-9_ubuntu-18.sif
+From: openmpi-4.0.2_ofi-1.11.2_psm2-11.2.185_ucx-1.9.0_gcc-7_ubuntu-18.sif
 
 %post
 
     # env variables from specific compiler 
-    export CXX=/usr/bin/g++-9   
-    export CC=/usr/bin/gcc-9
-    export FC=/usr/bin/gfortran-9
+    #export CXX=/usr/bin/g++-9   
+    #export CC=/usr/bin/gcc-9
+    #export FC=/usr/bin/gfortran-9
 
     ## env variables from openmpi
 
