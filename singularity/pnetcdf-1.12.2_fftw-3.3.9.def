@@ -10,8 +10,8 @@ From: mpibase.sif
     fi
 
     export PATH=/usr/local/bin:$PATH
-    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
-    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:/usr/local/lib64:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
     export MANPATH=/usr/local/share/man:$MANPATH
 
@@ -43,7 +43,7 @@ From: mpibase.sif
             python3-numpy \
             python3-pytest \
             python3-scipy \
-            python3-setuptools \
+            python3-setuptools
         rm -rf /var/lib/apt/lists/* 
     fi
 
@@ -104,7 +104,7 @@ From: mpibase.sif
 %environment
 
     export PATH=/usr/local/bin:$PATH
-    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
-    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:/usr/local/lib64:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:/usr/local/lib64:$LD_LIBRARY_PATH
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
     export MANPATH=/usr/local/share/man:$MANPATH

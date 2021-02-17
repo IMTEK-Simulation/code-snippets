@@ -1,5 +1,5 @@
 Bootstrap: localimage
-From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-7_ubuntu-18.sif
+From: io.sif
 
 %post
 
