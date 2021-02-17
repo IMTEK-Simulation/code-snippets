@@ -1,0 +1,35 @@
+Bootstrap: docker
+From: fedora:32
+
+%post
+
+    # Note: On JUWELS, we need MPI in the container *only* for
+    # compilation. The native MPI is mounted into the container during
+    # execution. We therefore need to be careful to set the paths correctly,
+    # so the native MPI takes precedence over the one in the container.
+    #
+    # This container is based on Fedora-32 because it is roughly compatible
+    # with CentOS-8 but ships with the version of pmix that is installed on
+    # JUWELS.
+
+    # Make the recent gnu available
+    #dnf install -y dnf-plugins-core
+    #dnf config-manager --set-enabled powertools
+    # For lua/Lmod
+    #dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    dnf update -y
+    dnf install -y which findutils lua lua-devel lua-json lua-posix lua-term tcl tcl-devel wget git make file gcc gcc-c++ libibverbs-devel Lmod bzip2 ucx-devel numactl-devel libevent-devel openmpi-devel ocl-icd
+
+    # Download, compile and install OpenMPI
+    #curl -L https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OMPI_VERSION}.tar.bz2 | tar -xjC /tmp &&
+    #  cd /tmp/openmpi-$OMPI_VERSION &&
+    #  ./configure --prefix=/usr/local --enable-shared --with-hwloc --with-ucx=/usr   --with-verbs --with-libevent=external --without-orte --without-psm2 --disable-oshmem --with-ime --with-slurm --with-pmix=external --with-ompi-pmix-rte &&
+    #  make -j 4 install
+
+%environment
+
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH

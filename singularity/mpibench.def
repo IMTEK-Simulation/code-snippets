@@ -1,12 +1,14 @@
 Bootstrap: localimage
 
-From: openmpi-4.0.2_psm2-11.2.185_gcc-7_ubuntu-18.sif
+From: openmpi-4.1.0_ucx_1.9.0_gcc-9_centos-8.sif
 
 %post
 
-    # Set env variables so we can compile our application
-    export PATH=/usr/local/bin:$PATH
-    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
+    if [ -e /usr/share/modulefiles ]; then
+        export MODULEPATH=/usr/share/modulefiles
+        source /usr/share/lmod/lmod/init/bash
+        module load mpi
+    fi
 
     # Clone and compile MPI benchmark
     cd /opt
@@ -15,5 +17,10 @@ From: openmpi-4.0.2_psm2-11.2.185_gcc-7_ubuntu-18.sif
     make
 
 %runscript
+
+    if [ -n "$MODULEPATH" ]; then
+        module purge
+        module load GCC/9.3.0 OpenMPI/4.1.0rc1 Singularity-Tools
+    fi
 
     /opt/mpiBench/mpiBench "$@"
