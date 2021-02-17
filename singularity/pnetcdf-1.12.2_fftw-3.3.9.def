@@ -23,7 +23,7 @@ From: mpibase.sif
     export NETCDF4_PYTHON_VERSION=1.5.5.1
 
     if $(dnf --version); then
-        dnf install -y cmake m4 python3-devel python3-setuptools python3-pip python3-numpy python3-scipy python3-pytest
+        dnf install -y cmake libcurl-devel m4 python3-devel python3-setuptools python3-pip python3-numpy python3-scipy python3-pytest
     else
         export DEBIAN_FRONTEND=noninteractive
         export DEBCONF_NONINTERACTIVE_SEEN=true 
@@ -31,10 +31,7 @@ From: mpibase.sif
         apt-get -qq update
         apt-get -y -qq install \
             cmake \
-            git \
             libcurl4-openssl-dev \
-            libeigen3-dev \
-            libgmp-dev \
             m4 \
             python3-pip \
             python3-breathe \
