@@ -3,6 +3,18 @@ From: io.sif
 
 %post
 
+    if [ -e /usr/share/modulefiles ]; then
+        export MODULEPATH=/usr/share/modulefiles
+        source /usr/share/lmod/lmod/init/bash
+        module load mpi
+    fi
+
+    if $(which dnf); then
+        dnf install -y boost-devel
+    else
+        apt-get -y -qq libboost-test-dev
+    fi
+
     # Install muSpectre
     export MUSPECTRE_DIR=/opt/muSpectre
     export MUSPECTRE_BRANCH=merge/21_even_grid_points

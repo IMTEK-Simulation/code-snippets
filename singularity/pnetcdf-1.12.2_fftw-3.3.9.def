@@ -22,7 +22,7 @@ From: mpibase.sif
     export NETCDF4_VERSION=4.7.3
     export NETCDF4_PYTHON_VERSION=1.5.5.1
 
-    if $(which dnf); then
+    if $(dnf --version); then
         dnf install -y cmake m4 python3-devel python3-setuptools python3-pip python3-numpy python3-scipy python3-pytest
     else
         export DEBIAN_FRONTEND=noninteractive
@@ -32,7 +32,6 @@ From: mpibase.sif
         apt-get -y -qq install \
             cmake \
             git \
-            libboost-test-dev \
             libcurl4-openssl-dev \
             libeigen3-dev \
             libgmp-dev \
