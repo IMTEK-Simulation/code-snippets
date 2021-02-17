@@ -1,0 +1,33 @@
+Bootstrap: docker
+From: alpine:3.13
+
+%post
+
+    export PSM2_VERSION=11.2.185
+    export OMPI_VERSION=4.0.2 # like NEMO
+
+    # Install openMPI like documented in https://sylabs.io/guides/3.5/user-guide/mpi.html
+    # make the recent gnu available
+    apk add --no-cache build-base linux-headers numactl-dev curl wget git bash make file gcc g++ perl
+
+    # Download, compile and install PSM2
+    # PSM2 is installed into the defaul location /usr
+    curl -L https://github.com/cornelisnetworks/opa-psm2/archive/PSM2_${PSM2_VERSION}.tar.gz | tar -xzC /tmp &&
+    	cd /tmp/opa-psm2-PSM2_${PSM2_VERSION} &&
+        sed -i 's/readlink -m/readlink -f/g' $(find . -name Makefile) &&
+        make -j 4 &&
+        make install
+
+    # Download, compile and install OpenMPI
+    #curl -L https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-${OMPI_VERSION}.tar.bz2 | tar -xjC /tmp &&
+    #    cd /tmp/openmpi-$OMPI_VERSION &&
+    #    ./configure --prefix=/usr/local --with-psm2=/usr &&
+    #    make -j 4 install
+
+%environment
+
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
