@@ -11,7 +11,7 @@ From: fedora:33
 
     # Make the recent gnu available
     dnf upgrade -y
-    dnf install -y which wget git file bzip2 make gcc gcc-c++ numactl-devel
+    dnf install -y which wget git file bzip2 make gcc gcc-c++ numactl-devel hwloc-devel libevent-devel pmix-devel
 
     # Download, compile and install PSM2
     # PSM2 is installed into the default location /usr
@@ -20,7 +20,7 @@ From: fedora:33
 
     # Download, compile and install OpenMPI
     curl -L https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-${OMPI_VERSION}.tar.bz2 | tar -xjC /tmp &&
-      cd /tmp/openmpi-$OMPI_VERSION && ./configure --prefix=/usr/local --with-psm2=/usr && make -j 4 install
+      cd /tmp/openmpi-$OMPI_VERSION && ./configure --prefix=/usr/local --with-psm2=/usr --with-hwloc=external --with-libevent=external --with-pmix=external && make -j 4 install
 
 %environment
 

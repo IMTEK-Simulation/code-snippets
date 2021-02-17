@@ -26,10 +26,3 @@ From: fedora:32
     #  ./configure --prefix=/usr/local --enable-shared --with-hwloc --with-ucx=/usr   --with-verbs --with-libevent=external --without-orte --without-psm2 --disable-oshmem --with-ime --with-slurm --with-pmix=external --with-ompi-pmix-rte &&
     #  make -j 4 install
 
-%environment
-
-    export PATH=/usr/local/bin:$PATH
-    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
-    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:$LD_LIBRARY_PATH
-    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
-    export MANPATH=/usr/local/share/man:$MANPATH

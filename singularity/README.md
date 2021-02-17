@@ -21,3 +21,15 @@ running on NEMO.
 
 _Notes_: NEMO uses OmniPath. While OpenMPI can support OmniPath through UCX,
 PSM2 gives much better throughput in simple benchmarks.
+
+JUWELS
+------
+
+JUWELS automatically import the host MPI to the container. This leads to
+several problems, in particular with version of some libraries inside the
+container. (JUWELS MPI uses some libraries from the JUWELS software stack
+and some - such aus PMIX - from inside the container. Even worse, some
+libraries have newer version than in the CentOS base system.) The only base
+image that appears to work is Fedora-32.
+
+Use the `openmpi-4.1.0_fedora-32.def` base container for running on JUWELS.
