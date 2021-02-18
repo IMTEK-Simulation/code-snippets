@@ -43,12 +43,12 @@ done
 
 Explanation: 
 
-`dtool_lookup_compare.py --missing-only --terse ${SOURCE_BASE_URI}` prints all UUIDs of local datsets not registered yet at the lookup server as a JSON list.
-`tr -d '[", ]' | sed '/^$/d'` strips all JSON syntax and yields UUIDs as plain text with one UUID per line.
-`dtool ls -v ${SOURCE_BASE_URI}` lists all local datasets by their name together with their full URI in every second and their UUID in every third line.
-`grep --no-group-separator -B2 -Ff uuids.txt` greps all matching UUIDs and the previous two lines.
-`sed -n 2~3p` yields only every third line beginning from the second line, i.e. URIs.
-`awk '{$1=$1};1'` removes leading whitespaces.
+* `dtool_lookup_compare.py --missing-only --terse ${SOURCE_BASE_URI}` prints all UUIDs of local datsets not registered yet at the lookup server as a JSON list.
+* `tr -d '[", ]' | sed '/^$/d'` strips all JSON syntax and yields UUIDs as plain text with one UUID per line.
+* `dtool ls -v ${SOURCE_BASE_URI}` lists all local datasets by their name together with their full URI in every second and their UUID in every third line.
+* `grep --no-group-separator -B2 -Ff uuids.txt` greps all matching UUIDs and the previous two lines.
+* `sed -n 2~3p` yields only every third line beginning from the second line, i.e. URIs.
+* `awk '{$1=$1};1'` removes leading whitespaces.
 
 If copy fails with `Dataset already exist`error, there might be partially copied datasets (proto datasets in dtool speak) at the remote location.
 The lookup server won't register those. Try to resume unfinished copy operations with `dtool cp --resume`, i.e.
