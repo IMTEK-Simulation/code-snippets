@@ -275,7 +275,9 @@ for s in uuids:
 print(out)
 ```
 
+## Compare local dataset repository aganst registered entries on lookup server
 
+See README and script in subfolder `dtool_lookup_compare`. 
 
 ## Integrating dtool in FireWorks workflows
 
