@@ -17,11 +17,21 @@ export LC_ALL=C.UTF-8
 export DEBIAN_FRONTEND=noninteractive
 export DEBCONF_NONINTERACTIVE_SEEN=true
 
+# install meshio for use in connection with gmsh
+# install development version of matscipy with cli for pnp, c2d, stericify and fenics dependencies
 apt-get -qq update && apt-get -y -qq install \
     python3-pip \
     gmsh && \
-  python3 -m pip install meshio matscipy[cli,fenics] && \
-  rm -rf /var/lib/apt/lists/*
+  python3 -m pip install jupytext jupyter_contrib_nbextensions jupyter_nbextensions_configurator && \
+  jupyter contrib nbextension install && \
+  jupyter nbextension enable equation-numbering/main && \
+  jupyter nbextensions_configurator enable && \
+  jupyter nbextension install --py jupyter_nbextensions_configurator && \
+  python3 -m pip install meshio && \
+  python3 -m pip install git+https://github.com/libAtoms/matscipy.git#egg=matscipy[cli,fenics] && \
+  rm -rf ~/.cache/pip && \
+  apt-get clean && \
+  rm -rf /var/lib/apt/lists/* /var/tmp/*
 
 %help 
 singularity run fenics_and_gmsh.sif --port=8888
