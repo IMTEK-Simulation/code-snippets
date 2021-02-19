@@ -1,4 +1,6 @@
-# Compare local dataset repository aganst registered entries on lookup server
+# dtool_lookup_compare
+
+## Compare local dataset repository against registered entries on lookup server
 
 Sample usage of `dtool_lookup_compare.py` assuming a local folder `DATASETS` containing some datasets:
 
@@ -26,7 +28,7 @@ Datasets misssing on target:
 
 Run `dtool_lookup_compare.py --help` for detailed usage information.
 
-# Sync local to remote dataset repository (with latter indexed by lookup server)
+## Sync local to remote dataset repository (with latter indexed by lookup server)
    
 To find local datasets missing on lookup server, identify their local directories, and copy to remote destination, one may use the bash snippet
 
