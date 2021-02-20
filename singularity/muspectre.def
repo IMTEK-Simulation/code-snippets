@@ -9,7 +9,7 @@ From: io.sif
         module load mpi
     fi
 
-    if $(which dnf); then
+    if $(command -v dnf); then
         dnf install -y boost-devel
     else
         apt-get -y -qq libboost-test-dev
@@ -26,12 +26,7 @@ From: io.sif
     # NEMO is Sandy Bridge
     cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE="-O2 -march=sandybridge -mno-avx512f" -DCMAKE_CXX_FLAGS_RELEASE="-O2 -march=sandybridge -mno-avx512f" -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
     make -j 4
-
-%environment
-
-    # Variables to be used at runtime 
-    export MUSPECTRE_DIR=/opt/muSpectre
-    export PYTHONPATH=${MUSPECTRE_DIR}/build/language_bindings/libmugrid/python:${MUSPECTRE_DIR}/build/language_bindings/libmufft/python:${MUSPECTRE_DIR}/build/language_bindings/python:$PYTHONPATH
+    make install
 
 %runscript 
 

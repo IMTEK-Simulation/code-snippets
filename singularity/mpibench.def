@@ -1,6 +1,6 @@
 Bootstrap: localimage
 
-From: openmpi-4.1.0_ucx_1.9.0_gcc-9_centos-8.sif
+From: mpibase.sif
 
 %post
 
@@ -9,6 +9,8 @@ From: openmpi-4.1.0_ucx_1.9.0_gcc-9_centos-8.sif
         source /usr/share/lmod/lmod/init/bash
         module load mpi
     fi
+
+    dnf install -y strace
 
     # Clone and compile MPI benchmark
     cd /opt

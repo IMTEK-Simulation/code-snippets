@@ -9,16 +9,17 @@ From: fedora:32
     # so the native MPI takes precedence over the one in the container.
     #
     # This container is based on Fedora-32 because it is roughly compatible
-    # with CentOS-8 but ships with the version of pmix that is installed on
-    # JUWELS.
+    # with CentOS-8 but ships with versions of some packages (such as pmix)
+    # identical to those installed on JUWELS.
 
     # Make the recent gnu available
-    #dnf install -y dnf-plugins-core
+    dnf install -y dnf-plugins-core
     #dnf config-manager --set-enabled powertools
     # For lua/Lmod
     #dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    dnf config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/fedora32/x86_64/cuda-fedora32.repo
     dnf update -y
-    dnf install -y which findutils lua lua-devel lua-json lua-posix lua-term tcl tcl-devel wget git make file gcc gcc-c++ libibverbs-devel Lmod bzip2 ucx-devel numactl-devel libevent-devel openmpi-devel ocl-icd
+    dnf install -y which findutils lua lua-devel lua-json lua-posix lua-term tcl tcl-devel wget git make file gcc gcc-c++ strace libibverbs-devel Lmod bzip2 ucx-devel numactl-devel libevent-devel openmpi-devel ocl-icd nvidia-driver-devel cuda-cudart-11-1
 
     # Download, compile and install OpenMPI
     #curl -L https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${OMPI_VERSION}.tar.bz2 | tar -xjC /tmp &&
@@ -26,3 +27,11 @@ From: fedora:32
     #  ./configure --prefix=/usr/local --enable-shared --with-hwloc --with-ucx=/usr   --with-verbs --with-libevent=external --without-orte --without-psm2 --disable-oshmem --with-ime --with-slurm --with-pmix=external --with-ompi-pmix-rte &&
     #  make -j 4 install
 
+%environment
+
+    if [ -n "$MODULEPATH" ]; then
+        module purge
+        module load GCC/9.3.0 OpenMPI/4.1.0rc1 Singularity-Tools
+    fi
+
+    export PYTHONPATH=/usr/local/lib/python3.8/site-packages/:/usr/local/lib64/python3.8/site-packages/:$PYTHONPATH
