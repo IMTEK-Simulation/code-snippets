@@ -10,10 +10,11 @@ From: ubuntu:18.04
     export DEBIAN_FRONTEND=noninteractive
     export DEBCONF_NONINTERACTIVE_SEEN=true
 
-    # Install openMPI like documented in https://sylabs.io/guides/3.5/user-guide/mpi.html
-    # make the recent gnu available
+    # Note: gfortran is necessary even if Fortran is not required, because
+    # PnetCDF does not compute compile if OpenMPI does not have Fortran
+    # support.
     apt-get update
-    apt install -y software-properties-common libnuma-dev curl wget git bash make file gcc gfortran g++
+    apt-get install -y software-properties-common strace libnuma-dev libssl-dev curl wget git bash make file pkg-config gcc g++ gfortran python3-dev python3-pip
 
     # Download, compile and install PSM2
     # PSM2 is installed into the defaul location /usr
@@ -28,6 +29,15 @@ From: ubuntu:18.04
     ./configure --prefix=/usr/local --with-psm2=/usr
     make -j 4
     make install
+
+    # Install mpi4py
+    python3 -m pip install --no-binary mpi4py mpi4py==${SING_MPI4PY_VERSION}
+
+    # Clone and compile MPI benchmark
+    cd /opt
+    git clone https://github.com/LLNL/mpiBench.git
+    cd mpiBench
+    make
 
 %environment
 
