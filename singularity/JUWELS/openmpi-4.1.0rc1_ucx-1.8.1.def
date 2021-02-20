@@ -23,7 +23,7 @@ From: ubuntu:18.04
 
     # Install openMPI like documented in https://sylabs.io/guides/3.5/user-guide/mpi.html
     apt-get update
-    apt-get install -y software-properties-common strace libnuma-dev libssl-dev curl wget git bash make file pkg-config gcc g++ python3-dev python3-pip
+    apt-get install -y software-properties-common strace libnuma-dev libibverbs-dev libssl-dev curl wget git bash make file pkg-config gcc g++ python3-dev python3-pip
 
     # Download, compile and install HWLOC
     curl -L https://download.open-mpi.org/release/hwloc/v2.2/hwloc-${SING_HWLOC_VERSION}.tar.bz2 | tar -xjC /tmp
@@ -42,7 +42,7 @@ From: ubuntu:18.04
     # Download, compile and install UCX
     curl -L https://github.com/openucx/ucx/releases/download/v${SING_UCX_VERSION}/ucx-${SING_UCX_VERSION}.tar.gz | tar -xzC /tmp
     cd /tmp/ucx-${SING_UCX_VERSION}
-    ./configure --prefix=/usr/local --without-java --disable-doxygen-doc --enable-optimizations --disable-debug --disable-logging --disable-assertions --disable-params-check --disable-dependency-tracking --enable-cma --with-rc --with-ud --with-dc --with-mlx5-dv --with-ib-hw-tm --with-dm --without-cm --with-avx --with-gdrcopy
+    ./configure --prefix=/usr/local --without-java --disable-doxygen-doc --enable-mt --enable-optimizations --disable-debug --disable-logging --disable-assertions --disable-params-check --disable-dependency-tracking --enable-cma --with-verbs --with-rc --with-ud --with-dc --with-mlx5-dv --with-ib-hw-tm --with-dm --without-cm --with-avx
     make -j 4
     make install
 
@@ -57,7 +57,7 @@ From: ubuntu:18.04
     # Download, compile and install OpenMPI
     curl -L https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${SING_OMPI_VERSION}.tar.bz2 | tar -xjC /tmp
     cd /tmp/openmpi-$SING_OMPI_VERSION
-    ./configure --prefix=/usr/local --enable-shared --without-orte --disable-oshmem --without-psm2 --with-ucx=/usr/local --with-slurm --with-pmi=/usr/local --with-hwloc=external --with-pmix=internal --with-libevent=external --with-ompi-pmix-rte
+    ./configure --prefix=/usr/local --enable-shared --without-orte --disable-oshmem --without-verbs --without-psm2 --with-ucx=/usr/local --with-slurm --with-pmi=/usr/local --with-hwloc=external --with-pmix=internal --with-libevent=external --with-ompi-pmix-rte
     make -j 4
     make install
 
