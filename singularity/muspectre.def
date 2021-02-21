@@ -1,5 +1,5 @@
 Bootstrap: localimage
-From: io.sif
+From: fftw_and_io.sif
 
 %post
 
@@ -9,22 +9,38 @@ From: io.sif
         module load mpi
     fi
 
+    # Set environment variable to contain /usr/local
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
+
+    # For apt to be noninteractive
+    export DEBIAN_FRONTEND=noninteractive
+    export DEBCONF_NONINTERACTIVE_SEEN=true
+
     if $(command -v dnf); then
         dnf install -y boost-devel
     else
-        apt-get -y -qq libboost-test-dev
+        apt-get install -y libboost-test-dev
     fi
 
     # Install muSpectre
-    export MUSPECTRE_DIR=/opt/muSpectre
+    export MUSPECTRE_BUILD_DIR=/tmp/muspectre
     export MUSPECTRE_BRANCH=merge/21_even_grid_points
-    git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git ${MUSPECTRE_DIR}
-    cd ${MUSPECTRE_DIR}
+    rm -rf ${MUSPECTRE_BUILD_DIR}
+    git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git ${MUSPECTRE_BUILD_DIR}
+    cd ${MUSPECTRE_BUILD_DIR}
     python3 -m pip install -r requirements.txt
     python3 -m pip install NuMPI
     cd build
-    # NEMO is Sandy Bridge
-    cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS_RELEASE="-O2 -march=sandybridge -mno-avx512f" -DCMAKE_CXX_FLAGS_RELEASE="-O2 -march=sandybridge -mno-avx512f" -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
+    # NEMO is Sandy Bridge, JUWELS is Skylake
+    # NEMO: -march=sandybridge -mno-avx512f
+    #export OPT_FLAGS="-O2 -march=sandybridge -mno-avx512f"
+    # JUWELS: -march=skylake
+    export OPT_FLAGS="-O2 -march=skylake"
+    cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
     make -j 4
     make install
 

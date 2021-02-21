@@ -1,14 +1,22 @@
 Bootstrap: docker
-From: ubuntu:18.04
+From: ubuntu:20.04
 
 %post
 
-    export PSM2_VERSION=11.2.185
+    export PSM2_VERSION=11.2.185 # latest
     export OMPI_VERSION=4.0.2 # like NEMO
+    export SING_MPI4PY_VERSION=3.0.3 
 
     ## for apt to be noninteractive
     export DEBIAN_FRONTEND=noninteractive
     export DEBCONF_NONINTERACTIVE_SEEN=true
+
+    # Set environment variable to contain /usr/local
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
 
     # Note: gfortran is necessary even if Fortran is not required, because
     # PnetCDF does not compute compile if OpenMPI does not have Fortran
@@ -18,12 +26,14 @@ From: ubuntu:18.04
 
     # Download, compile and install PSM2
     # PSM2 is installed into the defaul location /usr
+    rm -rf /tmp/opa-psm2-PSM2_${PSM2_VERSION}
     curl -L https://github.com/cornelisnetworks/opa-psm2/archive/PSM2_${PSM2_VERSION}.tar.gz | tar -xzC /tmp
     cd /tmp/opa-psm2-PSM2_${PSM2_VERSION}
     make -j 4
     make install
 
     # Download, compile and install OpenMPI
+    rm -rf /tmp/openmpi-$OMPI_VERSION
     curl -L https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-${OMPI_VERSION}.tar.bz2 | tar -xjC /tmp
     cd /tmp/openmpi-$OMPI_VERSION
     ./configure --prefix=/usr/local --with-psm2=/usr
@@ -42,7 +52,7 @@ From: ubuntu:18.04
 %environment
 
     export PATH=/usr/local/bin:$PATH
-    export LD_RUN_PATH=/usr/lib64:/usr/local/lib:$LD_RUN_PATH
-    export LD_LIBRARY_PATH=/usr/lib64:/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
     export MANPATH=/usr/local/share/man:$MANPATH
