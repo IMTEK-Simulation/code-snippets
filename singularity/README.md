@@ -8,7 +8,8 @@ machine, while the code is run via the installation in the container.
 Communication between these instances only works reliably if they have the same
 version.
 
-_All_ manually compiled code is installed in /usr/local.
+_All_ manually compiled code is installed in `/usr/local`. All base container
+contain a simple benchmark in `/opt/mpiBench`.
 
 NEMO
 ----
@@ -22,6 +23,26 @@ running on NEMO.
 _Notes_: NEMO uses OmniPath. While OpenMPI can support OmniPath through UCX,
 PSM2 gives much better throughput in simple benchmarks.
 
+An example script for NEMO looks as follows:
+```
+#MSUB -l nodes=1:ppn=2
+#MSUB -l walltime=00:15:00
+#MSUB -l pmem=1000mb
+#MSUB -q express
+#MSUB -m bea
+
+set -e
+
+ml system/modules/testing
+ml mpi/openmpi/4.0-gnu-9.2
+ml tools/singularity/3.5
+
+cd $MOAB_SUBMITDIR
+
+# Run in container
+mpirun -n $PBS_NP singularity exec mpibase.sif /opt/mpiBench/mpiBench
+```
+
 JUWELS
 ------
 
@@ -32,4 +53,22 @@ and some - such aus PMIX - from inside the container. Even worse, some
 libraries have newer version than in the CentOS base system.) The only base
 image that appears to work is Fedora-32.
 
-Use the `openmpi-4.1.0_fedora-32.def` base container for running on JUWELS.
+Use the `openmpi-4.1.0rc1_ucx-1.8.1.def` base container for running on JUWELS.
+
+You need to specify `--mpi=pspmix` with `srun`. Make sure that you _do not_
+load MPI through the Lmod system. An example script on JUWELS looks as
+follows:
+```
+#!/bin/bash -x
+#SBATCH --account=hka18
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=48
+#SBATCH --time=00:30:00
+#SBATCH --partition=batch
+
+PROJECT_PATH=/p/project/chka18
+
+module load GCC/9.3.0 Singularity-Tools
+
+srun --mpi=pspmix singularity run ${PROJECT_PATH}/muspectre.sif ${PROJECT_PATH}/projects/SurfaceRoughness/Continuum/biaxial_free_surface.py -d 0.01 -n 10 -g 128,128,128
+```
