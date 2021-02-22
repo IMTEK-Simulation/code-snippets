@@ -23,7 +23,7 @@ _Notes_: NEMO uses OmniPath. While OpenMPI can support OmniPath through UCX,
 PSM2 gives much better throughput in simple benchmarks.
 
 An example script for NEMO looks as follows:
-```
+```bash
 #MSUB -l nodes=1:ppn=2
 #MSUB -l walltime=00:15:00
 #MSUB -l pmem=1000mb
@@ -53,11 +53,18 @@ libraries have newer version than in the CentOS base system.) The only base
 image that appears to work is Fedora-32.
 
 Use the `openmpi-4.1.0rc1_ucx-1.8.1.def` base container for running on JUWELS.
+You will need to copy the proprietary GPFS library and headers to your
+computer before building the container. Execute
+```bash
+tar -cvzf gpfs.tar.gz -C /usr/lpp/mmfs lib/libgpfs.so include
+```
+on JUWELS and copy the file `gpfs.tar.gz` to the directory where you build the
+base container.
 
 You need to specify `--mpi=pspmix` with `srun`. Make sure that you _do not_
 load MPI through the Lmod system. An example script on JUWELS looks as
 follows:
-```
+```bash
 #!/bin/bash -x
 #SBATCH --account=hka18
 #SBATCH --nodes=1
