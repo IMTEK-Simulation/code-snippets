@@ -1,0 +1,126 @@
+Bootstrap: docker
+From: ubuntu:20.04
+
+%help
+
+    This is the base container for running containerized and MPI parallel on
+    JUWELS. Before building, you need to copy the proprietary GPFS headers and
+    library to your local machine. Run
+
+      tar -cvzf gpfs.tar.gz -C /usr/lpp/mmfs lib/libgpfs.so include
+
+    on JUWELS and copy the file `gpfs.tar.gz` to the directory where you build
+    the Singularity image.
+
+    When running on JUWELS, *do not* load any MPI environment. (Slurm takes
+    care of process management and any loaded MPI will collide with the MPI
+    installation in the container.) Run the container via
+
+      srun --mpi=pspmix run container.sif python_script.py
+
+    in your job submission script.
+
+%files
+
+    gpfs.tar.gz
+
+%post
+
+    export SING_HWLOC_VERSION=2.2.0 # like JUWELS
+    export SING_LIBEVENT_VERSION=2.1.12 # like JUWELS
+    export SING_SLURM_VERSION=20.02.6 # like JUWELS
+    export SING_UCX_VERSION=1.9.0 # like JUWELS
+    export SING_OMPI_VERSION=4.1.0rc1 # like JUWELS
+    export SING_MPI4PY_VERSION=3.0.3 
+
+    # Set environment variable to contain /usr/local
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
+
+    # For apt to be noninteractive
+    export DEBIAN_FRONTEND=noninteractive
+    export DEBCONF_NONINTERACTIVE_SEEN=true
+
+    # Extract GPFS headers and library
+    tar -zvxf gpfs.tar.gz -C /usr/local
+
+    # Note: gfortran is necessary even if Fortran is not required, because
+    # PnetCDF does not compute compile if OpenMPI does not have Fortran
+    # support.
+    apt-get update
+    apt-get install -y software-properties-common strace libnuma-dev libibverbs-dev libssl-dev curl wget git bash make file pkg-config gcc g++ gfortran python3-dev python3-pip
+
+    # Download, compile and install HWLOC
+    rm -rf /tmp/hwloc-${SING_HWLOC_VERSION}
+    curl -L https://download.open-mpi.org/release/hwloc/v2.2/hwloc-${SING_HWLOC_VERSION}.tar.bz2 | tar -xjC /tmp
+    cd /tmp/hwloc-${SING_HWLOC_VERSION}
+    ./configure --prefix=/usr/local
+    make -j 4
+    make install
+
+    # Download, compile and install LIBEVENT
+    rm -rf /tmp/libevent-${SING_LIBEVENT_VERSION}-stable
+    curl -L https://github.com/libevent/libevent/releases/download/release-${SING_LIBEVENT_VERSION}-stable/libevent-${SING_LIBEVENT_VERSION}-stable.tar.gz | tar -xzC /tmp
+    cd /tmp/libevent-${SING_LIBEVENT_VERSION}-stable
+    ./configure --prefix=/usr/local
+    make -j 4
+    make install
+
+    # Download, compile and install UCX
+    # Check compile options of native UCX on JUWELS with `ucx_info -b`.
+    rm -rf /tmp/ucx-${SING_UCX_VERSION}
+    curl -L https://github.com/openucx/ucx/releases/download/v${SING_UCX_VERSION}/ucx-${SING_UCX_VERSION}.tar.gz | tar -xzC /tmp
+    cd /tmp/ucx-${SING_UCX_VERSION}
+    ./configure --prefix=/usr/local --without-java --disable-doxygen-doc --enable-mt --enable-optimizations --disable-debug --disable-logging --disable-assertions --disable-params-check --disable-dependency-tracking --enable-cma --with-verbs --with-rc --with-ud --with-dc --with-mlx5-dv --with-ib-hw-tm --with-dm --without-cm --with-avx
+    make -j 4
+    make install
+
+    # Download SLURM - needed for PMI2
+    rm -rf /tmp/slurm-${SING_SLURM_VERSION}
+    curl -L https://download.schedmd.com/slurm/slurm-${SING_SLURM_VERSION}.tar.bz2 | tar -xjC /tmp
+    cd /tmp/slurm-${SING_SLURM_VERSION}
+    ./configure --prefix=/usr/local
+    cd contribs/pmi2
+    make -j 4
+    make install
+
+    # Download, compile and install OpenMPI
+    # Slurm handles starting of processes and initial communication with the
+    # process runs through PMI2 or PMIX. We also disable verbs because this
+    # leads to warnings that it is not being used anyway.
+    # Check compile options of native OpenMPI on JUWELS with `ompi_info`.
+    rm -rf /tmp/openmpi-$SING_OMPI_VERSION
+    curl -L https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-${SING_OMPI_VERSION}.tar.bz2 | tar -xjC /tmp
+    cd /tmp/openmpi-$SING_OMPI_VERSION
+    ./configure --prefix=/usr/local --enable-shared --without-orte --disable-oshmem --without-verbs --without-psm2 --with-ucx=/usr/local --with-slurm --with-pmi=/usr/local --with-hwloc=external --with-pmix=internal --with-libevent=external --with-ompi-pmix-rte --with-gpfs
+    make -j 4
+    make install
+
+    # Set OpenMPI configuration (this needs to be indented to the left!!!)
+cat <<EOF > /usr/local/etc/openmpi-mca-params.conf
+io = romio321
+EOF
+
+    # Install mpi4py
+    python3 -m pip install --no-binary mpi4py mpi4py==${SING_MPI4PY_VERSION}
+
+    # Clone and compile MPI benchmark
+    cd /opt
+    git clone https://github.com/LLNL/mpiBench.git
+    cd mpiBench
+    make
+
+%environment
+
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
+
+%runscript
+
+    python3 "$@" 
