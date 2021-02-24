@@ -1,0 +1,38 @@
+Bootstrap: localimage
+From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-7_ubuntu-18.sif
+
+%post
+    # Paths to the compiled netcdf, pnetcdf file
+    BUILDDIR=/tmp
+    PREFIX=/usr/local
+
+    # Install Python packages
+    python3 -m pip install --upgrade pip
+    python3 -m pip install --upgrade pytest
+    python3 -m pip install --upgrade numpy 
+    python3 -m pip install --upgrade scipy
+    python3 -m pip install --upgrade mpi4py 
+    python3 -m pip install NuMPI
+    python3 -m pip install ase
+
+    # clone and install matscipy --> not released until now
+    export MATSCIPY_DIR=/opt 
+    git clone https://github.com/libAtoms/matscipy.git $MATSCIPY_DIR/matscipy
+    cd $MATSCIPY_DIR/matscipy
+    python3 setup.py build
+    python3 setup.py install 
+
+    # Install LAMMPS 
+    export LAMMPS_DIR=/opt
+    git clone -b stable https://github.com/lammps/lammps.git $LAMMPS_DIR/lammps
+    cd $LAMMPS_DIR/lammps/src/ 
+    make yes-USER-NETCDF
+    make yes-MANYBODY 
+    make mode=shlib mpi 
+
+%environment
+    export LD_LIBRARY_PATH=/opt/lammps/src:$LD_LIBRARY_PATH
+    export PYTHONPATH=/opt/lammps/python:$PYTHONPATH
+
+%runscript 
+    /opt/lammps/src/lmp_mpi "$@"
