@@ -115,6 +115,11 @@ EOF
 
 %environment
 
+    # Send output directly to screen
+    export PYTHONUNBUFFERED=1
+    # Don't load module from $HOME/.local (which is not in the container)
+    export PYTHONUSERSITE=1
+
     export PATH=/usr/local/bin:$PATH
     export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
