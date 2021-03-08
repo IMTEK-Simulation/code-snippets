@@ -38,7 +38,7 @@ From: ubuntu:20.04
     cd /tmp/openmpi-$OMPI_VERSION
     ./configure --prefix=/usr/local --with-psm2=/usr
     make -j 4
-    make install
+    make install LIBDIR=/usr/local/lib
 
     # Install mpi4py
     python3 -m pip install --no-binary mpi4py mpi4py==${SING_MPI4PY_VERSION}
