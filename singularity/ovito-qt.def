@@ -1,0 +1,23 @@
+Bootstrap: localimage
+From: fftw_and_io.sif
+
+%post
+    BUILDDIR=/tmp
+    PREFIX=/usr/local
+
+    apt-get update
+    apt-get install -y language-pack-en-base
+    dpkg-reconfigure locales
+    locale -a
+    export LC_ALL="en_US.utf-8"
+
+    DEBIAN_FRONTEND=noninteractive apt-get install keyboard-configuration
+    apt-get install -y build-essential
+    apt-get install -y qtcreator
+    apt-get install -y qt5-default
+
+    python3 -m pip install --upgrade pip
+    pip install ovito
+
+%runscript 
+    python3
