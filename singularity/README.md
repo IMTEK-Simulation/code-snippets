@@ -49,8 +49,7 @@ JUWELS automatically import the host MPI to the container. This leads to
 several problems, in particular with version of some libraries inside the
 container. (JUWELS MPI uses some libraries from the JUWELS software stack
 and some - such aus PMIX - from inside the container. Even worse, some
-libraries have newer version than in the CentOS base system.) The only base
-image that appears to work is Fedora-32.
+libraries have newer version than in the CentOS base system.).
 
 Use the `openmpi-4.1.0rc1_ucx-1.9.0.def` base container for running on JUWELS.
 You will need to copy the proprietary GPFS library and headers to your
