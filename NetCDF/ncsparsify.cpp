@@ -210,7 +210,7 @@ void sparsify(char *infn, char *outfn, int every)
 void syntax()
 {
     printf("Syntax: ncsparsify <NetCDF-input-file> <every> <NetCDF-output-file>\n"
-           "Remove every n-th frame from an AMBER NetCDF trajectory file.");
+           "Keep only every n-th frame in an AMBER NetCDF trajectory file.");
 }
 
 int main(int argc, char *argv[])
