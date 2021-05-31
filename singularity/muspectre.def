@@ -28,12 +28,13 @@ From: fftw_and_io.sif
 
     # Install muSpectre
     export MUSPECTRE_BUILD_DIR=/tmp/muspectre
-    export MUSPECTRE_BRANCH=merge/21_even_grid_points
+    export MUSPECTRE_BRANCH=master
     rm -rf ${MUSPECTRE_BUILD_DIR}
     git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git ${MUSPECTRE_BUILD_DIR}
     cd ${MUSPECTRE_BUILD_DIR}
     python3 -m pip install -r requirements.txt
     python3 -m pip install NuMPI
+    python3 -m pip install meshio[all]
     cd build
     # NEMO is Sandy Bridge, JUWELS is Skylake
     # NEMO: -march=sandybridge -mno-avx512f
