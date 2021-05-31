@@ -1,0 +1,70 @@
+Bootstrap: localimage
+From: pfft_and_fftw_and_io.sif
+
+%post
+
+    if [ -e /usr/share/modulefiles ]; then
+        export MODULEPATH=/usr/share/modulefiles
+        source /usr/share/lmod/lmod/init/bash
+        module load mpi
+    fi
+
+    # Set environment variable to contain /usr/local
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
+
+    # For apt to be noninteractive
+    export DEBIAN_FRONTEND=noninteractive
+    export DEBCONF_NONINTERACTIVE_SEEN=true
+
+    if $(command -v dnf); then
+        dnf install -y boost-devel
+    else
+        apt-get install -y libboost-test-dev
+    fi
+
+    # additional stuff for plotting with image
+    # apt-get install -y python3-tk
+    # python3 -m pip install matplotlib
+    # apt-get install -y xauth
+
+    # Install muSpectre
+    export MUSPECTRE_BUILD_DIR=/tmp/muspectre
+    export MUSPECTRE_BRANCH=master
+    rm -rf ${MUSPECTRE_BUILD_DIR}
+    git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git ${MUSPECTRE_BUILD_DIR}
+    cd ${MUSPECTRE_BUILD_DIR}
+    python3 -m pip install -r requirements.txt
+    python3 -m pip install NuMPI
+    python3 -m pip install meshio[all]
+    cd build
+    # NEMO is Sandy Bridge, JUWELS is Skylake
+    # NEMO: -march=sandybridge -mno-avx512f
+    export OPT_FLAGS="-O2 -march=sandybridge -mno-avx512f"
+    # JUWELS: -march=skylake
+    #export OPT_FLAGS="-O2 -march=skylake"
+    cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DMUFFT_USE_FFTWMPI=ON -DMUFFT_USE_PFFT=ON -DNETCDF_IO=ON -DMUSPECTRE_MAKE_TESTS=ON -DBoost_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0 -DBoost_INCLUDE_DIR:PATH=/usr/include ..
+    make -j 4
+    make install
+
+%runscript
+
+    python3 "$@"
+
+%test
+    export MUSPECTRE_BUILD_DIR=/tmp/muspectre
+
+    cd /tmp/
+    chown -cR ${USER}:${USER} muspectre/
+    cd ${MUSPECTRE_BUILD_DIR}/build/
+    # the atomatic test is not working properly
+    # ctest --output-on-failure
+
+    # However you can execute the tests manually, where many tests work
+    # (with exception of tests that try to write files)
+    # singularity shell muspectre_fftw_pfft_with_tests.sif
+    # Singularity> cd /tmp/muspectre/build
+    # Singularity> ctest --output-on-failure
