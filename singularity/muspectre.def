@@ -20,11 +20,8 @@ From: fftw_and_io.sif
     export DEBIAN_FRONTEND=noninteractive
     export DEBCONF_NONINTERACTIVE_SEEN=true
 
-    if $(command -v dnf); then
-        dnf install -y boost-devel
-    else
-        apt-get install -y libboost-test-dev
-    fi
+    # Install dependencies
+    apt-get install -y libboost-test-dev #valgrind
 
     # Install muSpectre
     export MUSPECTRE_BUILD_DIR=/tmp/muspectre
@@ -33,15 +30,14 @@ From: fftw_and_io.sif
     git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git ${MUSPECTRE_BUILD_DIR}
     cd ${MUSPECTRE_BUILD_DIR}
     python3 -m pip install -r requirements.txt
-    python3 -m pip install NuMPI
-    python3 -m pip install meshio[all]
+    python3 -m pip install NuMPI meshio[all] matplotlib
     cd build
     # NEMO is Sandy Bridge, JUWELS is Skylake
     # NEMO: -march=sandybridge -mno-avx512f
-    #export OPT_FLAGS="-O2 -march=sandybridge -mno-avx512f"
+    export OPT_FLAGS="-O2 -march=sandybridge -mno-avx512f"
     # JUWELS: -march=skylake
-    export OPT_FLAGS="-O2 -march=skylake"
-    cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DNETCDF_IO=ON ..
+    #export OPT_FLAGS="-O2 -march=skylake"
+    cmake -DCMAKE_VERBOSE_MAKEFILE=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DMUFFT_USE_FFTWMPI=ON -DMUFFT_USE_PFFT=ON -DNETCDF_IO=ON ..
     make -j 4
     make install
 
