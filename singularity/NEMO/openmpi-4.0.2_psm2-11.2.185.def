@@ -40,6 +40,11 @@ From: ubuntu:20.04
     make -j 4
     make install
 
+    # Set OpenMPI configuration (this needs to be indented to the left!!!)
+cat <<EOF > /usr/local/etc/openmpi-mca-params.conf
+io = romio321
+EOF
+
     # Install mpi4py
     python3 -m pip install --no-binary mpi4py mpi4py==${SING_MPI4PY_VERSION}
 
