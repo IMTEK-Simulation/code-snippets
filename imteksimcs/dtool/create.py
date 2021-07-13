@@ -7,7 +7,7 @@ def set_derived_from(uuids, readme_file="../README.yml", mode="w"):
 
     Parameters
     ----------
-    uuids: list of str
+    uuids: list or set of str
         uuids to be added to derived_from
     readme_file: str
         path ro readme file, default `../README.yml`
@@ -46,5 +46,5 @@ def set_derived_from(uuids, readme_file="../README.yml", mode="w"):
         )
 
     # Rewrite readmefile
-    with open("../README.yml", "w") as f:
+    with open(readme_file, "w") as f:
         yaml.dump(yml, f)
