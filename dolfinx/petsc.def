@@ -1,0 +1,77 @@
+Bootstrap: localimage
+From: xtensor.sif
+ 
+%environment
+
+    export PETSC_VERSION=3.15.0
+    export SLEPC_VERSION=3.15.0
+    export SLEPC4PY_VERSION=3.15.0
+    
+    export PETSC_SLEPC_OPTFLAGS="-O2"
+    export PETSC_SLEPC_MAKE_NP=2
+    
+    export PETSC_DIR=/usr/local/petsc 
+    export SLEPC_DIR=/usr/local/slepc
+
+%post
+
+    BUILDDIR=/tmp 
+    PREFIX=/usr/local 
+    
+    export PETSC_VERSION=3.15.0
+    export SLEPC_VERSION=3.15.0
+    export SLEPC4PY_VERSION=3.15.0
+    
+    export PETSC_SLEPC_OPTFLAGS="-O2"
+    export PETSC_SLEPC_MAKE_NP=2
+    
+    export PETSC_DIR=/usr/local/petsc 
+    export SLEPC_DIR=/usr/local/slepc
+    
+    apt-get -qq update && \
+    apt-get -y install bison flex && \
+    wget -nc --quiet http://ftp.mcs.anl.gov/pub/petsc/release-snapshots/petsc-lite-${PETSC_VERSION}.tar.gz -O petsc-${PETSC_VERSION}.tar.gz && \
+    mkdir -p ${PETSC_DIR} && tar -xf petsc-${PETSC_VERSION}.tar.gz -C ${PETSC_DIR} --strip-components 1 && \
+    cd ${PETSC_DIR} && \
+    # Real, 32-bit int
+    python3 ./configure \
+    export PETSC_ARCH=linux-gnu-real-32 \
+    --COPTFLAGS="${PETSC_SLEPC_OPTFLAGS}" \
+    --CXXOPTFLAGS="${PETSC_SLEPC_OPTFLAGS}" \
+    --FOPTFLAGS="${PETSC_SLEPC_OPTFLAGS}" \
+    --with-make-np=${PETSC_SLEPC_MAKE_NP} \
+    --with-64-bit-indices=no \
+    --with-debugging=${PETSC_SLEPC_DEBUGGING} \
+    --with-fortran-bindings=no \
+    --with-shared-libraries \
+    --download-hypre \
+    --download-metis \
+    --download-mumps \
+    --download-ptscotch \
+    --download-scalapack \
+    --download-spai \
+    --download-suitesparse \
+    --download-superlu \
+    --download-superlu_dist \
+    --with-scalar-type=real && \
+    make PETSC_DIR=/usr/local/petsc PETSC_ARCH=linux-gnu-real-32 ${MAKEFLAGS} all && \
+
+    # Install petsc4py
+    cd src/binding/petsc4py && \
+    PETSC_ARCH=linux-gnu-real-32 pip3 install --no-cache-dir . && \
+    # Cleanup
+    apt-get -y purge bison flex && \
+    apt-get -y autoremove && \
+    apt-get clean && \
+    rm -rf \
+    ${PETSC_DIR}/**/tests/ \
+    ${PETSC_DIR}/**/obj/ \
+    ${PETSC_DIR}/**/externalpackages/  \
+    ${PETSC_DIR}/CTAGS \
+    ${PETSC_DIR}/RDict.log \
+    ${PETSC_DIR}/TAGS \
+    ${PETSC_DIR}/docs/ \
+    ${PETSC_DIR}/share/ \
+    ${PETSC_DIR}/src/ \
+    ${PETSC_DIR}/systems/ #\
+    #rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
