@@ -1,1 +1,10 @@
 dolfinx singularity container with gmsh and meshio
+
+Build in following order:
+1. openmpi
+2. pnetcdf
+3. boost
+4. xtensor
+5. petsc
+6. ffcx
+7. meshio
