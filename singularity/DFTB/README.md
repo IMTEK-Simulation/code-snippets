@@ -1,6 +1,6 @@
 # DFTB
 
-This directory contains a Docker recipe that builds Atomistica and DFTB+ with the Intel HPC (legacy) compiler suite. The Docker recipe uses a two stage build to minimize the image size. It compiles both the Python interface and the standalone code.
+This directory contains a Docker recipe that builds [Atomistica](https://github.com/Atomistica/atomistica) and [DFTB+](https://github.com/dftbplus/dftbplus) with the Intel HPC (legacy) compiler suite. The Docker recipe uses a two stage build to minimize the image size. It compiles both the Python interface and the standalone code.
 
 Build the Docker image with:
 ```bash
