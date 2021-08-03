@@ -1,0 +1,86 @@
+Bootstrap: localimage
+From: mpibase.sif
+
+%post
+     
+    # For compiling we need to load Fedora's MPI module
+    # (if the base image is based on Fedora)   
+    if [ -e /usr/share/modulefiles ]; then
+        export MODULEPATH=/usr/share/modulefiles
+        source /usr/share/lmod/lmod/init/bash
+        module load mpi
+    fi
+
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
+
+    export SING_FFTW_VERSION=3.3.9
+    export SING_MPI4PY_VERSION=3.0.3 
+    export SING_HDF5_VERSION=1.10.6 
+    export SING_PNETCDF_VERSION=1.12.2
+    export SING_NETCDF4_VERSION=4.7.3
+    export SING_NETCDF4_PYTHON_VERSION=1.5.5.1
+
+    if $(command -v dnf); then
+        dnf install -y cmake libcurl-devel m4
+    else
+        export DEBIAN_FRONTEND=noninteractive
+        export DEBCONF_NONINTERACTIVE_SEEN=true 
+
+        apt-get -qq update
+        apt-get -y -qq install \
+            cmake \
+            libcurl4-openssl-dev \
+            m4
+    fi
+
+    python3 -m pip install --upgrade setuptools numpy scipy pytest
+
+    BUILDDIR=/tmp 
+    PREFIX=/usr/local
+
+    # Manual install of MPI parallel FFTW
+    rm -rf ${BUILDDIR}/fftw-${SING_FFTW_VERSION}
+    curl http://www.fftw.org/fftw-${SING_FFTW_VERSION}.tar.gz | tar -xzC ${BUILDDIR}
+    cd ${BUILDDIR}/fftw-${SING_FFTW_VERSION}
+    ./configure --enable-shared --enable-mpi --disable-fortran --enable-sse2 --enable-avx --enable-avx2 --prefix=${PREFIX}
+    make -j 4
+    make install
+
+    # Install parallel version of the NetCDF library from the sources.
+    # This is necessary because parallel compiles (if existing) are
+    # broken on most distributions.
+    rm -rf ${BUILDDIR}/pnetcdf-${SING_PNETCDF_VERSION}
+    curl https://parallel-netcdf.github.io/Release/pnetcdf-${SING_PNETCDF_VERSION}.tar.gz | tar -xzC ${BUILDDIR}
+    cd ${BUILDDIR}/pnetcdf-${SING_PNETCDF_VERSION}
+    ./configure --disable-fortran --disable-cxx --enable-shared --prefix=${PREFIX}
+    make -j 4
+    make install
+
+    rm -rf ${BUILDDIR}/hdf5-${SING_HDF5_VERSION}
+    curl https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${SING_HDF5_VERSION}/src/hdf5-${SING_HDF5_VERSION}.tar.gz | tar -xzC ${BUILDDIR}
+    cd ${BUILDDIR}/hdf5-${SING_HDF5_VERSION}
+    ./configure --enable-parallel --prefix=${PREFIX}
+    make -j 4
+    make install
+
+    # We need to compile NetCDF ourselves because there is no package that has
+    # parallel PnetCDF and HDF5 enabled.
+    rm -rf ${BUILDDIR}/netcdf-c-build
+    curl https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-${SING_NETCDF4_VERSION}.tar.gz | tar -xzC ${BUILDDIR}
+    mkdir -p ${BUILDDIR}/netcdf-c-build
+    cd ${BUILDDIR}/netcdf-c-build
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${PREFIX} -DUSE_PARALLEL=ON -DENABLE_PARALLEL4=ON -DENABLE_PNETCDF=ON -DENABLE_TESTS=OFF ${BUILDDIR}/netcdf-c-${SING_NETCDF4_VERSION}
+    make -j 4
+    make install
+
+    # Install netcdf4-python and make sure that it is compiled (no-binary),
+    # otherwise it will not have parallel support.
+    NETCDF4_DIR=${PREFIX} HDF5_DIR=${PREFIX} python3 -m pip install --no-binary netCDF4 netCDF4==${SING_NETCDF4_PYTHON_VERSION}
+
+%runscript
+
+    python3 "$@"

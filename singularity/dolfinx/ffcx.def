@@ -1,0 +1,75 @@
+Bootstrap: localimage
+From: petsc.sif
+ 
+%environment
+
+    export PETSC_VERSION=3.15.0
+    export SLEPC_VERSION=3.15.0
+    export SLEPC4PY_VERSION=3.15.0
+    
+    export PETSC_SLEPC_OPTFLAGS="-O2"
+    export PETSC_SLEPC_MAKE_NP=2
+    
+    export PETSC_DIR=/usr/local/petsc 
+    export SLEPC_DIR=/usr/local/slepc
+    
+    PKG_CONFIG_PATH=/usr/local/dolfinx-real/lib/pkgconfig:$PKG_CONFIG_PATH \
+    PETSC_ARCH=linux-gnu-real-32 \
+    PYTHONPATH=/usr/local/dolfinx-real/lib/python3.8/dist-packages:$PYTHONPATH \
+    LD_LIBRARY_PATH=/usr/local/dolfinx-real/lib:$LD_LIBRARY_PATH
+
+%post
+
+    PKG_CONFIG_PATH=/usr/local/dolfinx-real/lib/pkgconfig:$PKG_CONFIG_PATH \
+    PETSC_ARCH=linux-gnu-real-32 \
+    PYTHONPATH=/usr/local/dolfinx-real/lib/python3.8/dist-packages:$PYTHONPATH \
+    LD_LIBRARY_PATH=/usr/local/dolfinx-real/lib:$LD_LIBRARY_PATH
+
+    BUILDDIR=/tmp 
+    PREFIX=/usr/local 
+    
+    git clone https://github.com/FEniCS/ufl.git
+    git clone https://github.com/FEniCS/ffcx.git
+    git clone https://github.com/FEniCS/basix.git
+    git clone https://github.com/FEniCS/dolfinx.git
+    
+    # The dolfinx-onbuild container expects to have folders basix/ ufl/ ffcx/ and
+    # dolfinx/ mounted/shared at /src.
+    cd basix && cmake -DCMAKE_BUILD_TYPE=${DOLFINX_CMAKE_BUILD_TYPE} -DCMAKE_CXX_FLAGS=${DOLFINX_CMAKE_CXX_FLAGS} -B build-dir -S . && \
+    cmake --build build-dir && \
+    cmake --install build-dir && \
+    python3 -m pip install ./python && \
+    cd ../ufl && pip3 install --no-cache-dir . && \
+    cd ../ffcx && pip3 install --no-cache-dir . && \
+    cd ../ && pip3 install --no-cache-dir ipython
+    
+    DOLFINX_DIR=/usr/local/dolfinx 
+    
+    #cd dolfinx && \
+    #mkdir -p build-real && \
+    #cd build-real && \
+    #PETSC_ARCH=linux-gnu-real-32 cmake -DCMAKE_INSTALL_PREFIX=/usr/local/dolfinx-real -DCMAKE_BUILD_TYPE=${DOLFINX_CMAKE_BUILD_TYPE} -DCMAKE_CXX_FLAGS=${DOLFINX_CMAKE_CXX_FLAGS} ../cpp && \
+    #cd ../python && \
+    #CXXFLAGS=${DOLFINX_CMAKE_CXX_FLAGS} PETSC_ARCH=linux-gnu-real-32 pip3 install --target /usr/local/dolfinx-real/lib/python3.8/dist-packages --no-dependencies . 
+    
+    cd dolfinx
+    cd cpp
+    mkdir build
+    cd build
+    PETSC_ARCH=linux-gnu-real-32 cmake -DCMAKE_INSTALL_PREFIX=/usr/local/dolfinx-real ..
+    make install
+    
+    #source /usr/local/lib/dolfinx/dolfinx.conf
+
+    
+    cd ../../python
+    PETSC_DIR=/usr/local/petsc 
+    PETSC_ARCH=linux-gnu-real-32 pip3 install --target /usr/local/dolfinx-real/lib/python3.8/dist-packages --no-dependencies . 
+    
+    PYTHONPATH=/usr/local/dolfinx-real/lib/python3.8/dist-packages:$PYTHONPATH \
+    
+%environment
+    export PKG_CONFIG_PATH=/usr/local/dolfinx-real/lib/pkgconfig:$PKG_CONFIG_PATH \
+    export PETSC_ARCH=linux-gnu-real-32 \
+    export PYTHONPATH=/usr/local/dolfinx-real/lib/python3.8/dist-packages:$PYTHONPATH \
+    export LD_LIBRARY_PATH=/usr/local/dolfinx-real/lib:$LD_LIBRARY_PATH

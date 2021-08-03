@@ -1,0 +1,41 @@
+Bootstrap: localimage
+From: ffcx.sif
+ 
+%environment
+    # Send output directly to screen
+    export PYTHONUNBUFFERED=1
+    # Don't load module from $HOME/.local (which is not in the container)
+    export PYTHONUSERSITE=1
+
+    # Set environment variable to contain /usr/local
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH
+    
+    export HDF5_MPI="ON"
+    export CC=mpicc
+    export HDF5_DIR="/usr/lib/x86_64-linux-gnu/hdf5/mpich/"
+    export GMSH_VERSION=4.6.0
+    
+%post
+
+    pip3 install --no-cache-dir --no-binary=h5py h5py meshio
+    dpkgArch="$(dpkg --print-architecture)"; \
+    case "$dpkgArch" in amd64) \
+      cd /usr/local && \
+      wget -nc --quiet http://gmsh.info/bin/Linux/gmsh-4.6.0-Linux64-sdk.tgz && \
+      tar -xf gmsh-4.6.0-Linux64-sdk.tgz && \
+      rm gmsh-4.6.0-Linux64-sdk.tgz ;; \
+    esac;
+   
+%environment
+    export PATH=/usr/local/gmsh-4.6.0-Linux64-sdk/bin:$PATH \
+    export PYTHONPATH=/usr/local/gmsh-4.6.0-Linux64-sdk/lib:$PYTHONPATH
+    export PYTHONPATH=/usr/local/lib/python3.8/dist-packages:$PYTHONPATH \
+    export PATH=/usr/local/bin:$PATH
+    export LD_RUN_PATH=/usr/local/lib:$LD_RUN_PATH
+    export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+    export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+    export MANPATH=/usr/local/share/man:$MANPATH

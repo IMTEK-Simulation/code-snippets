@@ -1,0 +1,39 @@
+Bootstrap: localimage
+From: boost.sif
+ 
+%post
+
+    PYBIND11_VERSION=2.6.2
+    XTENSOR_VERSION=0.23.6
+    XTENSOR_BLAS_VERSION=master
+    XTL_VERSION=0.7.2
+
+    BUILDDIR=/tmp 
+    PREFIX=/usr/local
+    
+    # Install xtl, xtensor, xtensor-blas.
+    git clone -b ${XTL_VERSION} --single-branch https://github.com/xtensor-stack/xtl.git && \
+    cd xtl && \
+    cmake -G Ninja . && \
+    ninja install && \
+    cd ../ && \
+    git clone -b ${XTENSOR_VERSION} --single-branch https://github.com/xtensor-stack/xtensor.git && \
+    cd xtensor && \
+    cmake -G Ninja . && \
+    ninja install && \
+    cd ../ && \
+    git clone -b ${XTENSOR_BLAS_VERSION} --single-branch https://github.com/xtensor-stack/xtensor-blas.git && \
+    cd xtensor-blas && \
+    cmake -G Ninja . && \
+    ninja install && \
+    rm -rf xtl xtensor xtensor-blas
+
+    # Install pybind11
+    wget -nc --quiet https://github.com/pybind/pybind11/archive/v${PYBIND11_VERSION}.tar.gz && \
+    tar -xf v${PYBIND11_VERSION}.tar.gz && \
+    cd pybind11-${PYBIND11_VERSION} && \
+    mkdir build && \
+    cd build && \
+    cmake -DPYBIND11_TEST=False ../ && \
+    make install #&& \
+    #rm -rf /tmp/*

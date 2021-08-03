@@ -1,0 +1,56 @@
+Bootstrap: localimage
+From: fftw_and_io.sif
+
+%environment
+
+    OPENBLAS_NUM_THREADS=1
+    OPENBLAS_VERBOSE=0
+
+%post
+# Install dependencies available via apt-get.
+# - First set of packages are required to build and run FEniCS.
+# - Second set of packages are recommended and/or required to build
+#   documentation or tests.
+# - Third set of packages are optional, but required to run gmsh
+#   pre-built binaries.
+
+    export XTENSOR_VERSION=0.23.6
+
+    BUILDDIR=/tmp 
+    PREFIX=/usr/local
+
+    export DEBIAN_FRONTEND=noninteractive && \
+    apt-get -qq update && \
+    apt-get -yq --with-new-pkgs -o Dpkg::Options::="--force-confold" upgrade && \
+    apt-get -y install \
+    clang-10 \
+    g++ \
+    gfortran \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-timer-dev \
+    liblapack-dev \
+#    lib${MPI}-dev \
+    libopenblas-dev \
+    ninja-build \
+    pkit clone -b ${XTENSOR_VERSION} --single-branch https://github.com/xtensor-stack/xtensor.git && \
+    cd xtensor && \
+    cmake -G Ninja . && \
+    ninja install && \
+    cd ../ && \g-config \
+    #
+    apt-get -y install \
+    doxygen \
+    git \
+    graphviz \
+    valgrind \
+    wget && \
+    #
+    apt-get -y install \
+    libglu1 \
+    libxcursor-dev \
+    libxft2 \
+    libxinerama1 && \
+    #
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
