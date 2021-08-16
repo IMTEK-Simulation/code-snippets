@@ -1,5 +1,5 @@
 Bootstrap: localimage
-From: ../NEMO/fftw_and_io.sif
+From: mpibase.sif
 
 %post
     # Paths to the compiled netcdf, pnetcdf file
@@ -11,6 +11,14 @@ From: ../NEMO/fftw_and_io.sif
 
     # Install Python packages
     python3 -m pip install gpaw
+
+    # Get GPAW setups
+    mkdir -p /usr/local/share
+    curl -L https://wiki.fysik.dtu.dk/gpaw-files/gpaw-setups-0.9.20000.tar.gz | tar -xzC /usr/local/share
+
+%environment
+
+    export GPAW_SETUP_PATH=/usr/local/share/gpaw-setups-0.9.20000
 
 %runscript 
     python3 "$@"
