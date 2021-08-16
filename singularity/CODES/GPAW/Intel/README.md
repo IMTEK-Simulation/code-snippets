@@ -16,3 +16,15 @@ Convert the image with:
 docker save gpaw -o gpaw.tar
 singularity build gpaw.sif docker-archive://gpaw.tar
 ```
+
+# Troubleshooting
+
+If you get an error
+```
+OMP: Error #179: Function Can't open SHM2 failed:
+OMP: System error #2: No such file or directory
+```
+you need to bind `/run/shm` into the container. Try executing:
+```
+OMP_NUM_THREADS=4 singularity run --bind /run/shm:/run/shm dftb.sif mdcore-1.0.1
+```

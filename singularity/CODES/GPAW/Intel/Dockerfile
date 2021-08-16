@@ -6,6 +6,8 @@ FROM intel/oneapi:os-tools-ubuntu18.04 AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive
 
+ENV ONEAPI_VERSION="2021.3.0"
+
 RUN apt-get update -y \
 	&& apt-get install -y \
 	software-properties-common \
@@ -26,16 +28,16 @@ RUN apt-get update -y \
 	python3 \
 	python3-dev \
 	python3-pip \
-	intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic \
-	intel-oneapi-compiler-fortran \
-	intel-oneapi-mkl-devel \
-	intel-oneapi-mpi-devel
+	intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-${ONEAPI_VERSION} \
+	intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
+	intel-oneapi-mkl-devel-${ONEAPI_VERSION} \
+	intel-oneapi-mpi-devel-${ONEAPI_VERSION}
 
-ENV PATH='/opt/intel/oneapi/mkl/2021.3.0/bin/intel64:/opt/intel/oneapi/compiler/2021.3.0/linux/bin/intel64:/opt/intel/oneapi/compiler/2021.3.0/linux/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'
-ENV CPATH='/opt/intel/oneapi/mkl/2021.3.0/include:/opt/intel/oneapi/compiler/2021.3.0/linux/include'
-ENV LD_LIBRARY_PATH='/opt/intel/oneapi/mkl/2021.3.0/lib/intel64:/opt/intel/oneapi/compiler/2021.3.0/linux/lib:/opt/intel/oneapi/compiler/2021.3.0/linux/lib/x64:/opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin'
-ENV LIBRARY_PATH='/opt/intel/oneapi/mkl/2021.3.0/lib/intel64:/opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/2021.3.0/linux/lib'
-ENV MKLROOT='/opt/intel/oneapi/mkl/2021.3.0'
+ENV PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV CPATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/include:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/include:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/include"
+ENV LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib/x64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
+ENV LIBRARY_PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
+ENV MKLROOT="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}"
 
 #
 # Numpy 1.19.5 and scipy 1.5.4 are last versions that support Ubuntu 18.04's Python 3.6
@@ -68,8 +70,10 @@ RUN CC=icc CXX=icpc ./configure --prefix=/usr/local --enable-shared \
     && make install
 
 # Install GPAW - Python module and standalone code
+# ASE 3.18.0 belongs to GPAW 19.8.1 - which seems the last to support Python 3.6
 RUN python3 -m pip install --upgrade pip \
-    && python3 -m pip install gpaw
+	&& python3 -m pip install ase==3.18.0 \
+    && CC=mpicc CXX=mpicxx python3 -m pip -v install gpaw==19.8.1
 
 #
 # ...which we then copy to the Docker image for running things
@@ -77,39 +81,45 @@ RUN python3 -m pip install --upgrade pip \
 
 FROM ubuntu:18.04
 
+ENV ONEAPI_VERSION="2021.3.0"
+
 RUN apt-get update -y \
 	&& apt-get install -y \
 	python3 \
 	python3-pip \
 	strace \
-	less
+	less \
+	curl
 
 # Environment variables for MPI and MKL
-ENV PATH="/opt/intel/oneapi/mpi/2021.3.0/libfabric/bin:/opt/intel/oneapi/mpi/2021.3.0/bin:/usr/local/bin:$PATH"
-ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mkl/2021.3.0/lib/intel64:/opt/intel/oneapi/mpi/2021.3.0/libfabric/lib:/opt/intel/oneapi/mpi/2021.3.0/lib:/usr/local/lib:$LD_LIBRARY_PATH"
+ENV PATH="/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/bin:$PATH"
+ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/usr/local/lib:$LD_LIBRARY_PATH"
 
 # Copy numpy, scipy, Atomistica and DFTB+
 COPY --from=builder /usr/local/ /usr/local/
 
 # Copy Fortran runtime - but only the libraries we actually need
-COPY --from=builder /opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/2021.3.0/linux/compiler/lib/intel64_lin/
+COPY --from=builder /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/
 
 # Copy MKL - but only the libaries we actually need
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libgcc_s.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_sequential.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_rt.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_core.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_intel_thread.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_intel_lp64.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_def.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmkl_avx*.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/libmemkind.so* /opt/intel/oneapi/mkl/2021.3.0/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mpi/2021.3.0/bin /opt/intel/oneapi/mpi/2021.3.0/
-COPY --from=builder /opt/intel/oneapi/mpi/2021.3.0/lib /opt/intel/oneapi/mpi/2021.3.0/
-COPY --from=builder /opt/intel/oneapi/mpi/2021.3.0/etc /opt/intel/oneapi/mpi/2021.3.0/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libgcc_s.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_sequential.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_rt.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_core.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_thread.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_lp64.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_def.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_avx*.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmemkind.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin/
+COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/
+COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc/
 
-# ASE 3.18.0 belongs to GPAW 19.8.1
-RUN pip install --upgrade pip \
-	&& pip install ase==3.18.0
+# Get GPAW setups
+RUN mkdir -p /usr/local/share \
+	&& curl -L https://wiki.fysik.dtu.dk/gpaw-files/gpaw-setups-0.9.20000.tar.gz | tar -xzC /usr/local/share
+
+# Set environment variable for GPAW setups
+ENV GPAW_SETUP_PATH=/usr/local/share/gpaw-setups-0.9.20000
 
 CMD ["python3"]
