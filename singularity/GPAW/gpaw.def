@@ -1,0 +1,16 @@
+Bootstrap: localimage
+From: ../NEMO/fftw_and_io.sif
+
+%post
+    # Paths to the compiled netcdf, pnetcdf file
+    BUILDDIR=/tmp
+    PREFIX=/usr/local
+
+    # Install blas, lapack and libxc
+    apt-get -y install libopenblas-dev liblapack-dev libxc-dev
+
+    # Install Python packages
+    python3 -m pip install gpaw
+
+%runscript 
+    python3 "$@"
