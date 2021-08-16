@@ -4,8 +4,6 @@
 
 FROM intel/oneapi:os-tools-ubuntu18.04 AS builder
 
-ARG DEBIAN_FRONTEND=noninteractive
-
 ENV ONEAPI_VERSION="2021.3.0"
 
 RUN apt-get update -y \
