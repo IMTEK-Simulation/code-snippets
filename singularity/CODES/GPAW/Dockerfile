@@ -68,13 +68,16 @@ RUN CC=icc CXX=icpc ./configure --prefix=/usr/local --enable-shared \
     && make install
 
 # Install GPAW - Python module and standalone code
-# ASE 3.18.0 belongs to GPAW 19.8.1 - which seems the last to support Python 3.6
-ENV ASE_VERSION=3.18.0
-ENV GPAW_VERSION=19.8.1
+# ASE 3.22.0 belongs to GPAW 21.6.0 - see https://wiki.fysik.dtu.dk/gpaw/releasenotes.html
+ENV ASE_VERSION=3.22.0
 RUN python3 -m pip install --upgrade pip \
 	&& python3 -m pip install ase==${ASE_VERSION} \
-	&& python3 -m pip install mpi4py matscipy \
-    && CC=mpicc CXX=mpicxx python3 -m pip -v install gpaw==${GPAW_VERSION}
+	&& python3 -m pip install mpi4py matscipy
+ENV GPAW_VERSION=21.6.0
+WORKDIR /tmp
+RUN echo 'mpicompiler="mpiicc"' > gpaw_siteconfig.py \
+	&& echo 'libraries =["xc", "mkl_rt", "pthread", "m"]' >> gpaw_siteconfig.py \
+	&& LANG=C.UTF-8 GPAW_CONFIG=/tmp/gpaw_siteconfig.py python3 -m pip -v install gpaw==${GPAW_VERSION}
 
 # Install simple MPI benchmark
 WORKDIR /tmp
