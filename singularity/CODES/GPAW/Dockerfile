@@ -126,10 +126,11 @@ COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric /opt/intel
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc/
 
 # Get GPAW setups
+ENV GPAW_SETUPS_VERSION="0.9.20000"
 RUN mkdir -p /usr/local/share \
-	&& curl -L https://wiki.fysik.dtu.dk/gpaw-files/gpaw-setups-0.9.20000.tar.gz | tar -xzC /usr/local/share
+	&& curl -L https://wiki.fysik.dtu.dk/gpaw-files/gpaw-setups-${GPAW_SETUPS_VERSION}.tar.gz | tar -xzC /usr/local/share
 
 # Set environment variable for GPAW setups
-ENV GPAW_SETUP_PATH=/usr/local/share/gpaw-setups-0.9.20000
+ENV GPAW_SETUP_PATH=/usr/local/share/gpaw-setups-${GPAW_SETUPS_VERSION}
 
 CMD ["python3"]
