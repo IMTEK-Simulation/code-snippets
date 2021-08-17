@@ -69,9 +69,19 @@ RUN CC=icc CXX=icpc ./configure --prefix=/usr/local --enable-shared \
 
 # Install GPAW - Python module and standalone code
 # ASE 3.18.0 belongs to GPAW 19.8.1 - which seems the last to support Python 3.6
+ENV ASE_VERSION=3.18.0
+ENV GPAW_VERSION=19.8.1
 RUN python3 -m pip install --upgrade pip \
-	&& python3 -m pip install ase==3.18.0 \
-    && CC=mpicc CXX=mpicxx python3 -m pip -v install gpaw==19.8.1
+	&& python3 -m pip install ase==${ASE_VERSION} \
+	&& python3 -m pip install mpi4py matscipy \
+    && CC=mpicc CXX=mpicxx python3 -m pip -v install gpaw==${GPAW_VERSION}
+
+# Install simple MPI benchmark
+WORKDIR /tmp
+RUN git clone https://github.com/LLNL/mpiBench.git \
+	&& cd mpiBench \
+	&& make \
+	&& cp mpiBench /usr/local/bin
 
 #
 # ...which we then copy to the Docker image for running things
@@ -91,7 +101,8 @@ RUN apt-get update -y \
 
 # Environment variables for MPI and MKL
 ENV PATH="/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/bin:$PATH"
-ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/usr/local/lib:$LD_LIBRARY_PATH"
+ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/usr/local/lib:$LD_LIBRARY_PATH"
+ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib/prov
 
 # Copy numpy, scipy, Atomistica and DFTB+
 COPY --from=builder /usr/local/ /usr/local/
@@ -111,6 +122,7 @@ COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_a
 COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmemkind.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/
+COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc/
 
 # Get GPAW setups
