@@ -136,4 +136,8 @@ RUN mkdir -p /usr/local/share \
 # Set environment variable for GPAW setups
 ENV GPAW_SETUP_PATH=/usr/local/share/gpaw-setups-${GPAW_SETUPS_VERSION}
 
+# Just make sure there is no OpenMP madness goingon
+ENV OMP_NUM_THREADS=1
+ENV MKL_NUM_THREADS=1
+
 CMD ["python3"]

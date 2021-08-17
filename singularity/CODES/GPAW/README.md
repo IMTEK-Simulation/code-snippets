@@ -22,6 +22,10 @@ singularity build gpaw.sif docker-daemon://gpaw:latest
 
 The container has a simple MPI benchmark installed. The exectuable is located at `/usr/local/bin/mpiBench`.
 
+### Debugging libfabric issues
+
+Set `FI_LOG_LEVEL=debug` before running the code.
+
 ### OMP: Error #179
 
 If you get an error
