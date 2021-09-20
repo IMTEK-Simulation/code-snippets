@@ -9,6 +9,8 @@ Build the Docker image with:
 docker build -t gpaw .
 ```
 
+The image is on Docker Hub [here](https://hub.docker.com/repository/docker/pastewka/gpaw).
+
 ## Singularity
 
 The Docker images can be converted into a Singularity image for use on HPC systems. Convert the image with:
