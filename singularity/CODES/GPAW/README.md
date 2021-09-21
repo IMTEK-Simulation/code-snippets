@@ -15,8 +15,15 @@ The image is on Docker Hub [here](https://hub.docker.com/repository/docker/paste
 
 The Docker images can be converted into a Singularity image for use on HPC systems. Convert the image with:
 ```bash
+sudo singularity build gpaw.sif docker-daemon://gpaw:latest
+```
+
+## Docker Hub
+
+The image is also available on [Docker Hub](https://hub.docker.com). To get it from there, execute:
+```bash
 docker pull pastewka/gpaw:210817
-sudo singularity build gpaw.sif docker-daemon://gpaw:210817
+sudo singularity build gpaw.sif docker-daemon://pastewka/gpaw:210817
 ```
 
 ## Troubleshooting
