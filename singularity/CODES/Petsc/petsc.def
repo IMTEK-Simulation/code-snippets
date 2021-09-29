@@ -1,0 +1,48 @@
+Bootstrap: localimage
+From: pnetcdf-1.12.2_fftw-3.3.9-romio.sif
+
+%post
+    # Install Python packages
+    python3 -m pip install --upgrade pip
+    python3 -m pip install pytest
+    python3 -m pip install Cython
+        
+    # Bison, Flex and  dh-autoreconf. Needed for PTscotch 
+    apt-get -qq update
+    apt-get -y -qq install flex bison dh-autoreconf
+
+    # Download Petsc 
+    git clone -b release https://gitlab.com/petsc/petsc.git /opt/petsc
+
+    # Install Petsc: 
+    # - Debugging auf 0 für bessere Performance
+    # - 64-bit-indices=0 nur wenn Slepc auch mit installiert werden soll, 
+    # da ARPACK in Slepc nur mit 32-bit kompiliert werden kann 
+    # Allow to perform tests of ompi as root --> Necessary to make tests in Slepc and Petsc
+    export OMPI_ALLOW_RUN_AS_ROOT=1 
+    export OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1 
+ 
+    GENERIC_COMPILER_FLAGS="-O3 -march=native -mtune=native"
+    cd /opt/petsc
+    ./configure  --with-64-bit-indices=1  \
+                 --with-debugging=0 \
+                 COPTFLAGS="${GENERIC_COMPILER_FLAGS}" \
+                 CXXOPTFLAGS="${GENERIC_COMPILER_FLAGS}" \
+                 FOPTFLAGS="${GENERIC_COMPILER_FLAGS}" \
+                 --download-fblaslapack=1 \
+                 --download-mumps \
+                 --download-scalapack \
+                 --download-parmetis \
+                 --download-metis \
+                 --download-ptscotch \
+                 --download-petsc4py=yes
+    make all check
+    export PETSC_DIR=/opt/petsc
+    export PETSC_ARCH=arch-linux-c-opt
+    export PYTHONPATH="${PYTHONPATH}:/opt/petsc/arch-linux-c-opt/lib"
+
+%environment
+    export PETSC_ARCH=arch-linux-c-opt
+    export PETSC_DIR=/opt/petsc
+
+%runscript 
