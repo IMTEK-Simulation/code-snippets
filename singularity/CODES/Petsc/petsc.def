@@ -6,6 +6,7 @@ From: pnetcdf-1.12.2_fftw-3.3.9-romio.sif
     python3 -m pip install --upgrade pip
     python3 -m pip install pytest
     python3 -m pip install Cython
+    python3 -m pip install numpy
         
     # Bison, Flex and  dh-autoreconf. Needed for PTscotch 
     apt-get -qq update
@@ -41,8 +42,13 @@ From: pnetcdf-1.12.2_fftw-3.3.9-romio.sif
     export PETSC_ARCH=arch-linux-c-opt
     export PYTHONPATH="${PYTHONPATH}:/opt/petsc/arch-linux-c-opt/lib"
 
+    cd /opt/petsc/src/binding/petsc4py
+    python3 setup.py build
+    python3 setup.py install
+
 %environment
     export PETSC_ARCH=arch-linux-c-opt
     export PETSC_DIR=/opt/petsc
+    export PYTHONPATH="${PYTHONPATH}:/opt/petsc/arch-linux-c-opt/lib"
 
 %runscript 
