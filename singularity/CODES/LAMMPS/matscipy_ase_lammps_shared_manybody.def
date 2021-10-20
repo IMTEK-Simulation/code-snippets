@@ -26,7 +26,7 @@ From: pnetcdf-1.12.2_fftw-3.3.9_openmpi-4.0.2_gcc-7_ubuntu-18.sif
     export LAMMPS_DIR=/opt
     git clone -b stable https://github.com/lammps/lammps.git $LAMMPS_DIR/lammps
     cd $LAMMPS_DIR/lammps/src/ 
-    make yes-USER-NETCDF
+    make yes-NETCDF
     make yes-MANYBODY 
     make mode=shlib mpi 
 
