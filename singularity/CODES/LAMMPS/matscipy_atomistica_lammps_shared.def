@@ -40,7 +40,7 @@ From: openmpi-4.0.2_psm2-11.2.185.sif
 
     # Install LAMMPS 
     cd $LAMMPS_DIR/lammps/src/ 
-    make yes-USER-NETCDF
+    make yes-NETCDF
     make yes-MANYBODY 
     make mode=shlib mpi 
 
