@@ -145,11 +145,11 @@ RUN apt-get install -y zlib1g-dev libjpeg-dev libboost-all-dev
 RUN python3 -m pip install NuMPI meshio[all] matplotlib
 ENV MUSPECTRE_BRANCH=master
 WORKDIR /tmp
-# We need to remove the -Weffc++ option as this messes with the Intel Compiler
-# (It complains that effective C++ does not allow C-style comments, which are
-# used in muSpectre.)
-RUN git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git \
-	&& sed -i 's/-Weffc++//g' muspectre/cmake/muspectreTools.cmake
+RUN git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git
+# If you want to try compiling with the Intel compilers: Remove the -Weffc++
+# option as this messes with the Intel Compiler (It complains that effective
+# C++ does not allow C-style comments, which are used in muSpectre.)
+# --- && sed -i 's/-Weffc++//g' muspectre/cmake/muspectreTools.cmake
 WORKDIR /tmp/muspectre/build
 # NEMO is Sandy Bridge, JUWELS is Skylake
 # NEMO: -march=sandybridge -mno-avx512f
@@ -157,11 +157,12 @@ WORKDIR /tmp/muspectre/build
 # JUWELS: -march=skylake
 # export OPT_FLAGS="-O2 -march=skylake"
 # Galileo100 is CPU Intel CascadeLake
-ENV OPT_FLAGS="-O2 -march=cascadelake"
-RUN cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DMUFFT_USE_FFTWMPI=ON -DMUFFT_USE_PFFT=ON -DNETCDF_IO=ON -DMUSPECTRE_MAKE_TESTS=OFF .. \
+#ENV OPT_FLAGS="-O2 -march=cascadelake"
+ENV OPT_FLAGS="-O2"
+RUN cmake -DCMAKE_C_COMPILER=mpigcc -DCMAKE_CXX_COMPILER=mpigxx -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DMUFFT_USE_FFTWMPI=ON -DMUFFT_USE_PFFT=ON -DNETCDF_IO=ON -DMUSPECTRE_MAKE_TESTS=OFF .. \
 	&& make -j 4 \
 	&& make install
-# -DBoost_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0 -DBoost_INCLUDE_DIR:PATH=/usr/include ..
+
 
 #
 # Install muSpectre
@@ -173,79 +174,39 @@ ENV LC_ALL C.UTF-8
 
 ENV ONEAPI_VERSION="2021.3.0"
 
-## for apt to be noninteractive
-ENV DEBIAN_FRONTEND noninteractive
-ENV DEBCONF_NONINTERACTIVE_SEEN true
-
-RUN apt-get -qq update && apt-get -y -qq install \
-    clang \
-    curl \
-    doxygen \
-    git \
-    wget \
-    build-essential \
-    libssl-dev \
-    libboost-test-dev \
-    libcurl4-openssl-dev \
-    libeigen3-dev \
-    libfftw3-dev \
-    libfftw3-mpi-dev \
-    libgmp-dev \
-    libhdf5-mpi-dev \
-    libpnetcdf-dev \
-    libnetcdf-dev \
-    m4 \
-    python3-pip \
-    python3-breathe \
-    python3-dev \
-    python3-netcdf4 \
-    python3-meshio \
-    python3-mpi4py \
-    python3-pytest \
-    python3-setuptools \
-    python3-sphinx \
-    python3-sphinx-rtd-theme \
-    gcovr \
-    ccache \
-    && rm -rf /var/lib/apt/lists/*
-
-# apt-get on one line due to https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#run
-
-# apt-get not needed any more
-#     g++ \
-#     python3-scipy \
-#     python3-numpy \
-#     cmake \   # a newer version is needed for intel oneapi
-
-RUN python3 -m pip install uvw
-
-# install newer cmake, version 3.21.4
-RUN wget https://github.com/Kitware/CMake/releases/download/v3.21.4/cmake-3.21.4.tar.gz
-RUN tar -zxvf cmake-3.21.4.tar.gz
-WORKDIR cmake-3.21.4
-RUN ./bootstrap
-RUN make
-RUN make install
+RUN apt-get update -y \
+	&& apt-get install -y \
+	python3 \
+	python3-pip \
+	strace \
+	less \
+	curl
 
 # Environment variables for MPI and MKL
 ENV PATH="/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/bin:$PATH"
 ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/usr/local/lib:$LD_LIBRARY_PATH"
 ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib/prov
 
-ENV PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ENV CPATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/include:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/include:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/include"
-ENV LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib/x64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
-ENV LIBRARY_PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
-ENV MKLROOT="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}"
-
-# Copy numpy, scipy
+# Copy numpy, scipy, Atomistica and DFTB+
 COPY --from=builder /usr/local/ /usr/local/
 
+# Copy Fortran runtime - but only the libraries we actually need
+COPY --from=builder /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/
+
+# Copy MKL - but only the libaries we actually need
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libgcc_s.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_sequential.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_rt.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_core.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_thread.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_lp64.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_def.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_avx*.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmemkind.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/etc/
-
 
 # Just make sure there is no OpenMP madness goingon
 ENV OMP_NUM_THREADS=1
