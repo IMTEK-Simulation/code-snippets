@@ -1,5 +1,5 @@
 #
-# This is a Docker file to build muSpectre with FFTW, PFFT and PNetCDF on intelmpi
+# This is a Docker file to build muSpectre with FFTW, PFFT and PNetCDF using Intel oneAPI
 #
 
 
@@ -141,8 +141,8 @@ RUN python3 -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION}
 #
 # Get muSpectre branch, compile and install
 #
-RUN apt-get install -y zlib1g-dev libjpeg-dev libboost-all-dev
-RUN python3 -m pip install NuMPI meshio[all] matplotlib
+RUN apt-get install -y zlib1g-dev libjpeg-dev libboost-test-dev
+RUN python3 -m pip install NuMPI meshio[all] matplotlib uvw
 ENV MUSPECTRE_BRANCH=master
 WORKDIR /tmp
 RUN git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git
@@ -189,8 +189,8 @@ ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib/prov
 # Copy everything we installed above
 COPY --from=builder /usr/local/ /usr/local/
 
-# Copy Fortran runtime - but only the libraries we actually need
-#COPY --from=builder /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/
+# Copy compiler runtime - but only the libraries we actually need
+COPY --from=builder /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/
 
 # Copy MKL - but only the libaries we actually need
 COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64 /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
