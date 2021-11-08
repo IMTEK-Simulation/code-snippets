@@ -141,13 +141,16 @@ RUN python3 -m pip install --no-binary mpi4py mpi4py==${MPI4PY_VERSION}
 #
 # Get muSpectre branch, compile and install
 #
-RUN apt-get install -y zlib1g-dev libjpeg-dev
+RUN apt-get install -y zlib1g-dev libjpeg-dev libboost-all-dev
 RUN python3 -m pip install NuMPI meshio[all] matplotlib
 ENV MUSPECTRE_BRANCH=master
 WORKDIR /tmp
-RUN git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git && mkdir /tmp/muspectre-build
-WORKDIR /tmp/muspectre-build
-WORKDIR build
+# We need to remove the -Weffc++ option as this messes with the Intel Compiler
+# (It complains that effective C++ does not allow C-style comments, which are
+# used in muSpectre.)
+RUN git clone -b ${MUSPECTRE_BRANCH} https://gitlab.com/muspectre/muspectre.git \
+	&& sed -i 's/-Weffc++//g' muspectre/cmake/muspectreTools.cmake
+WORKDIR /tmp/muspectre/build
 # NEMO is Sandy Bridge, JUWELS is Skylake
 # NEMO: -march=sandybridge -mno-avx512f
 # export OPT_FLAGS="-O2 -march=sandybridge -mno-avx512f"
@@ -155,7 +158,7 @@ WORKDIR build
 # export OPT_FLAGS="-O2 -march=skylake"
 # Galileo100 is CPU Intel CascadeLake
 ENV OPT_FLAGS="-O2 -march=cascadelake"
-RUN cmake -DCMAKE_C_COMPILER=icc -DCMAKE_CXX_COMPILER=icpc -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DMUFFT_USE_FFTWMPI=ON -DMUFFT_USE_PFFT=ON -DNETCDF_IO=ON -DMUSPECTRE_MAKE_TESTS=ON /tmp/muspectre \
+RUN cmake -DCMAKE_C_COMPILER=mpiicc -DCMAKE_CXX_COMPILER=mpiicpc -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_C_FLAGS_RELEASE="${OPT_FLAGS}" -DCMAKE_CXX_FLAGS_RELEASE="${OPT_FLAGS}" -DMUSPECTRE_MPI_PARALLEL=ON -DMUFFT_USE_FFTWMPI=ON -DMUFFT_USE_PFFT=ON -DNETCDF_IO=ON -DMUSPECTRE_MAKE_TESTS=ON .. \
 	&& make -j 4 \
 	&& make install
 # -DBoost_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Boost-1.71.0 -DBoost_INCLUDE_DIR:PATH=/usr/include ..
