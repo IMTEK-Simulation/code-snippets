@@ -193,7 +193,13 @@ COPY --from=builder /usr/local/ /usr/local/
 COPY --from=builder /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/
 
 # Copy MKL - but only the libaries we actually need
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64 /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_sequential.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_rt.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_core.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_thread.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_lp64.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_def.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_avx*.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/
