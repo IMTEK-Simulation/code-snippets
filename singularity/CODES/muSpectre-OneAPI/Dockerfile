@@ -32,16 +32,15 @@ RUN apt-get update -y \
 	python3 \
 	python3-dev \
 	python3-pip \
+	libopenblas-dev \
 	intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-${ONEAPI_VERSION} \
 	intel-oneapi-compiler-fortran-${ONEAPI_VERSION} \
-	intel-oneapi-mkl-devel-${ONEAPI_VERSION} \
 	intel-oneapi-mpi-devel-${ONEAPI_VERSION}
 
-ENV PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ENV CPATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/include:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/include:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/include"
-ENV LD_LIBRARY_PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib/x64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
-ENV LIBRARY_PATH="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
-ENV MKLROOT="/opt/intel/oneapi/mkl/${ONEAPI_VERSION}"
+ENV PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin/intel64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ENV CPATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/include:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/include"
+ENV LD_LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib/x64:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
+ENV LIBRARY_PATH="/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin:/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/release:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib"
 
 #
 # Install simple MPI benchmark
@@ -163,8 +162,10 @@ RUN cmake -DCMAKE_C_COMPILER=mpigcc -DCMAKE_CXX_COMPILER=mpigxx -DCMAKE_VERBOSE_
 	&& make -j 4 \
 	&& make install
 
+ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
+
 #
-# Install muSpectre
+# Copy muSpectre to smaller container
 #
 FROM ubuntu:18.04
 
@@ -179,7 +180,8 @@ RUN apt-get update -y \
 	python3-pip \
 	strace \
 	less \
-	curl
+	curl \
+	libopenblas-base
 
 # Environment variables for MPI and MKL
 ENV PATH="/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/bin:/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin:/usr/local/bin:$PATH"
@@ -193,13 +195,15 @@ COPY --from=builder /usr/local/ /usr/local/
 COPY --from=builder /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/*.so* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/linux/compiler/lib/intel64_lin/
 
 # Copy MKL - but only the libaries we actually need
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_sequential.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_rt.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_core.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_thread.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_lp64.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_def.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
-COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_avx*.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_sequential.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_rt.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_core.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_thread.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_intel_lp64.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_def.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+#COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_avx*.so* /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/
+
+# Copy MPI - but only the libraries we actually need
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/bin/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/lib/
 COPY --from=builder /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric /opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/

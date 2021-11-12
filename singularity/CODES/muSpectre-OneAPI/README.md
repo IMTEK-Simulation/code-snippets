@@ -9,6 +9,12 @@ Build the Docker image with:
 docker build -t muspectre .
 ```
 
+You can run a shell inside the container with:
+```bash
+docker run -it --mount type=bind,source="${HOME}",target="/home" muspectre /bin/bash
+```
+Note that this binds your home directory to `/home`.
+
 The image is on Docker Hub [here](https://hub.docker.com/repository/docker/pastewka/muspectre).
 
 ## Singularity
