@@ -27,11 +27,16 @@ From: petsc.sif
 
     BUILDDIR=/tmp 
     PREFIX=/usr/local 
+
+    UFL_VERSION="2021.1.0"
+    FFCX_VERSION="0.1.0"
+    BASIX_VERSION="0.1.0"
+    DOLFINX_VERSION="0.1.0"
     
-    git clone https://github.com/FEniCS/ufl.git
-    git clone https://github.com/FEniCS/ffcx.git
-    git clone https://github.com/FEniCS/basix.git
-    git clone https://github.com/FEniCS/dolfinx.git
+    git clone -b ${UFL_VERSION} https://github.com/FEniCS/ufl.git
+    git clone -b ${FFCX_VERSION} https://github.com/FEniCS/ffcx.git
+    git clone -b ${BASIX_VERSION} https://github.com/FEniCS/basix.git
+    git clone -b ${DOLFINX_VERSION} https://github.com/FEniCS/dolfinx.git
     
     # The dolfinx-onbuild container expects to have folders basix/ ufl/ ffcx/ and
     # dolfinx/ mounted/shared at /src.
