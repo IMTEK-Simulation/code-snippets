@@ -3,8 +3,8 @@
 ## Build & run
 
 
-    docker run -p 8888:8888 -v "${HOME}":/home/jovyan jupyter/imteksim-notebook
-    docker build --rm -t jupyter/imteksim-notebook .
+    docker build -t imkteksim/dtool-jupyter .
+    docker run -it -p 8888:8888 -v ${HOME}/.config/dtool:/home/jovyan/.config/dtool -v ${HOME}:/home/jovyan/work imkteksim/dtool-jupyter
 
 ## Creation protocol
 

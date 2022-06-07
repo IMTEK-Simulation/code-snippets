@@ -15,6 +15,7 @@ imteksimfw
 ipython
 ipywidgets
 Jinja2
+jupyterlab_autorun_cells
 jupytext
 matplotlib
 MDAnalysis

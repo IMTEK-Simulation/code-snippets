@@ -8,8 +8,12 @@ aiohttp==3.8.1
     # via dtool-lookup-api
 aiosignal==1.2.0
     # via aiohttp
+anyio==3.5.0
+    # via jupyter-server
 argon2-cffi==21.3.0
-    # via notebook
+    # via
+    #   jupyter-server
+    #   notebook
 argon2-cffi-bindings==21.2.0
     # via argon2-cffi
 arrow==1.2.2
@@ -145,6 +149,8 @@ entrypoints==0.4
     # via
     #   jupyter-client
     #   nbconvert
+et-xmlfile==1.1.0
+    # via openpyxl
 executing==0.8.3
     # via stack-data
 fireworks==2.0.2
@@ -173,6 +179,7 @@ gunicorn==20.1.0
     # via fireworks
 idna==3.3
     # via
+    #   anyio
     #   requests
     #   yarl
 importlib-resources==5.4.0
@@ -208,6 +215,7 @@ jinja2==3.0.3
     #   flask
     #   imteksimfw
     #   jinja2-time
+    #   jupyter-server
     #   nbconvert
     #   notebook
 jinja2-time==0.2.0
@@ -223,14 +231,20 @@ jsonschema==4.4.0
 jupyter-client==7.1.2
     # via
     #   ipykernel
+    #   jupyter-server
     #   nbclient
     #   notebook
 jupyter-core==4.9.2
     # via
     #   jupyter-client
+    #   jupyter-server
     #   nbconvert
     #   nbformat
     #   notebook
+jupyter-server==1.16.0
+    # via jupyterlab-autorun-cells
+jupyterlab-autorun-cells==1.0.0
+    # via -r requirements.in
 jupyterlab-pygments==0.1.2
     # via nbconvert
 jupyterlab-widgets==1.0.2
@@ -282,10 +296,13 @@ multidict==6.0.2
 nbclient==0.5.13
     # via nbconvert
 nbconvert==6.4.4
-    # via notebook
+    # via
+    #   jupyter-server
+    #   notebook
 nbformat==5.2.0
     # via
     #   ipywidgets
+    #   jupyter-server
     #   jupytext
     #   nbclient
     #   nbconvert
@@ -321,11 +338,14 @@ numpy==1.22.3
     #   ovito
     #   pandas
     #   scipy
+openpyxl==3.0.9
+    # via -r requirements.in
 ovito==3.7.2
     # via -r requirements.in
 packaging==21.3
     # via
     #   bleach
+    #   jupyter-server
     #   matplotlib
     #   mdanalysis
 pandas==1.4.1
@@ -359,7 +379,9 @@ pillow==9.0.1
 pip-tools==6.5.1
     # via -r requirements.in
 prometheus-client==0.13.1
-    # via notebook
+    # via
+    #   jupyter-server
+    #   notebook
 prompt-toolkit==3.0.28
     # via ipython
 psutil==5.9.0
@@ -412,6 +434,7 @@ pyyaml==6.0
 pyzmq==22.3.0
     # via
     #   jupyter-client
+    #   jupyter-server
     #   notebook
 requests==2.27.1
     # via dtool-http
@@ -432,7 +455,9 @@ scipy==1.8.0
     #   mdanalysis
     #   numkit
 send2trash==1.8.0
-    # via notebook
+    # via
+    #   jupyter-server
+    #   notebook
 shiboken2==5.15.2.1
     # via pyside2
 shiboken6==6.2.3
@@ -449,6 +474,8 @@ six==1.16.0
     #   numkit
     #   paramiko
     #   python-dateutil
+sniffio==1.2.0
+    # via anyio
 soupsieve==2.3.1
     # via beautifulsoup4
 stack-data==0.2.0
@@ -456,7 +483,9 @@ stack-data==0.2.0
 tabulate==0.8.9
     # via fireworks
 terminado==0.13.3
-    # via notebook
+    # via
+    #   jupyter-server
+    #   notebook
 testpath==0.6.0
     # via nbconvert
 threadpoolctl==3.1.0
@@ -471,6 +500,7 @@ tornado==6.1
     # via
     #   ipykernel
     #   jupyter-client
+    #   jupyter-server
     #   notebook
     #   terminado
 tqdm==4.63.0
@@ -484,6 +514,7 @@ traitlets==5.1.1
     #   ipywidgets
     #   jupyter-client
     #   jupyter-core
+    #   jupyter-server
     #   matplotlib-inline
     #   nbclient
     #   nbconvert
@@ -499,6 +530,8 @@ wcwidth==0.2.5
     # via prompt-toolkit
 webencodings==0.5.1
     # via bleach
+websocket-client==1.3.2
+    # via jupyter-server
 werkzeug==2.0.3
     # via flask
 wheel==0.37.1
