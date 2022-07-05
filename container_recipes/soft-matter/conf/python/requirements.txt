@@ -338,7 +338,7 @@ Twisted
 twine
 typed-ast
 typing-extensions
-ujson==1.35
+ujson==5.4.0
 Unidecode
 urllib3
 versioneer
