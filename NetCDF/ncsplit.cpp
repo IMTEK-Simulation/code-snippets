@@ -120,13 +120,11 @@ void split(char *infn, char *outpref, int nchunks)
             return;
         }
     }
-    if (!types.isNull()) {
-        const auto &types_dims = types.getDims();
-        if (types_dims.size() != 2 || types_dims[0] != frame ||
-            types_dims[1] != atom) {
-            printf("'type' variable must have dimensions '(frame, atom)'.\n");
-            return;
-        }
+    const auto &types_dims = types.getDims();
+    if (types_dims.size() != 2 || types_dims[0] != frame ||
+        types_dims[1] != atom) {
+        printf("'type' variable must have dimensions '(frame, atom)'.\n");
+        return;
     }
     const auto &coordinates_dims = coordinates.getDims();
     if (coordinates_dims.size() != 3 || coordinates_dims[0] != frame ||
@@ -177,10 +175,7 @@ void split(char *infn, char *outpref, int nchunks)
         if (!ids.isNull()) {
             out_ids = outnc.addVar("id", ids.getType(), {out_frame, out_atom});
         }
-        NcVar out_types;
-        if (!types.isNull()) {
-            out_types = outnc.addVar("atom_types", types.getType(), {out_frame, out_atom});
-        }
+        const NcVar &out_types = outnc.addVar("atom_types", types.getType(), {out_frame, out_atom});
         const NcVar &out_coordinates = outnc.addVar("coordinates", coordinates.getType(), {out_frame, out_atom, out_spatial});
         NcVar out_velocities;
         if (!velocities.isNull()) {
@@ -213,9 +208,8 @@ void split(char *infn, char *outpref, int nchunks)
             if (!ids.isNull())
                 copyvar("id", ids, start, out_ids, out_start, count, natoms,
                         intScalarChunk.data());
-            if (!types.isNull())
-                copyvar("atom_types", types, start, out_types, out_start, count,
-                        natoms, intScalarChunk.data());
+            copyvar("atom_types", types, start, out_types, out_start, count,
+                    natoms, intScalarChunk.data());
             copyvar("coordinates", coordinates, start, out_coordinates,
                     out_start, count, natoms, doubleVectorChunk.data());
             if (!velocities.isNull())
