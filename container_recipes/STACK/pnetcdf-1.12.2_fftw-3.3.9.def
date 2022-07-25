@@ -69,8 +69,8 @@ From: mpibase.sif
 
     # We need to compile NetCDF ourselves because there is no package that has
     # parallel PnetCDF and HDF5 enabled.
-    rm -rf ${BUILDDIR}/netcdf-c-build
-    curl https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-${SING_NETCDF4_VERSION}.tar.gz | tar -xzC ${BUILDDIR}
+    rm -rf ${BUILDDIR}/netcdf-c-build ${BUILDDIR}/netcdf-c-${SING_NETCDF4_VERSION}
+    git clone -b v${SING_NETCDF4_VERSION} https://github.com/Unidata/netcdf-c.git ${BUILDDIR}/netcdf-c-${SING_NETCDF4_VERSION}
     mkdir -p ${BUILDDIR}/netcdf-c-build
     cd ${BUILDDIR}/netcdf-c-build
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${PREFIX} -DUSE_PARALLEL=ON -DENABLE_PARALLEL4=ON -DENABLE_PNETCDF=ON -DENABLE_TESTS=OFF ${BUILDDIR}/netcdf-c-${SING_NETCDF4_VERSION}
