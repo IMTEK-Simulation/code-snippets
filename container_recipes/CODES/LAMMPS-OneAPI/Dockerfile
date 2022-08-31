@@ -102,15 +102,15 @@ RUN MPICC=mpiicc MPICXX=mpiicpc ./configure --enable-parallel --prefix=/usr/loca
 # We need to compile NetCDF ourselves because there is no package that has
 # parallel PnetCDF and HDF5 enabled.
 #
-ENV NETCDF4_VERSION=4.7.3
+ENV NETCDF4_VERSION=4.9.0
 WORKDIR /tmp
-RUN curl https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-${NETCDF4_VERSION}.tar.gz | tar -xz && mkdir /tmp/netcdf-c-build
+RUN curl https://downloads.unidata.ucar.edu/netcdf-c/${NETCDF4_VERSION}/netcdf-c-${NETCDF4_VERSION}.tar.gz | tar -xz && mkdir /tmp/netcdf-c-build
 WORKDIR /tmp/netcdf-c-build
 RUN cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local -DMPI_CC_COMPILER=mpiicc -DMPI_CXX_COMPILER=mpiicpc -DUSE_PARALLEL=ON -DENABLE_PARALLEL4=ON -DENABLE_PNETCDF=ON -DENABLE_TESTS=OFF /tmp/netcdf-c-${NETCDF4_VERSION} \
 	&& make -j 4 \
 	&& make install
 
-ENV LAMMPS_VERSION="stable_29Sep2021"
+ENV LAMMPS_VERSION="stable_23Jun2022_update1"
 WORKDIR /tmp
 RUN apt-get install -y libjpeg62-dev libpng-dev \
 	&& curl -L https://github.com/lammps/lammps/archive/refs/tags/${LAMMPS_VERSION}.tar.gz | tar xz
@@ -197,5 +197,8 @@ COPY --from=builder /opt/intel/oneapi/mkl/${ONEAPI_VERSION}/lib/intel64/libmkl_a
 # Just make sure there is no OpenMP madness goingon
 ENV OMP_NUM_THREADS=1
 ENV MKL_NUM_THREADS=1
+
+# Fix FI_PROVIDER_PATH
+ENV FI_PROVIDER_PATH=/opt/intel/oneapi/mpi/${ONEAPI_VERSION}/libfabric/lib/prov
 
 CMD ["/usr/local/bin/lmp"]
