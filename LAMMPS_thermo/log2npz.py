@@ -18,8 +18,22 @@ def get_line_nums(fp, regexp):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Read LAMMPS log from STDIN and write numerical data to "
-        "STDOUT in compressed Numpy format (binary, one frame per array)"
+        description=(
+            "Read LAMMPS log from STDIN and write numerical data to "
+            "STDOUT in compressed Numpy format (binary, one frame per array)"
+        ),
+        epilog=(
+            "Example usage:\n"
+            "\n"
+            "    ./log2npz.py < log.lammps > lammps_thermo_logz.npz\n"
+            "\n"
+            "How to use generated file:\n"
+            "\n"
+            "    # Loops over all the runs\n"
+            "    for thermo_data in np.load('lammps_thermo_logs.npz'):\n"
+            "        thermo_data['Temp'], thermo_data['PotEng'], ..."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
     parser.parse_args()
