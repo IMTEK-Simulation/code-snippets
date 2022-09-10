@@ -13,8 +13,7 @@ The Docker images can be converted into a Singularity image for use on HPC syste
 
 Convert the image with:
 ```bash
-docker save lammps -o lammps.tar
-singularity build lammps.sif docker-archive://lammps.tar
+singularity build lammps.sif docker-daemon://lammps:latest
 ```
 
 ## Running the standalone code
