@@ -11,6 +11,7 @@ dtoolcore
 dtool-s3
 gromacs
 GromacsWrapper
+igraph
 imteksimfw
 ipython
 ipywidgets

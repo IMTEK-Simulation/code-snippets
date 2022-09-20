@@ -11,8 +11,8 @@
 Describes how to extract imports from python scripts and dump as pip-processible `requirements.txt`.
 
 ```console
-python3 -m venv ~/venv/celan-venv
-source ~/venv/clean-venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 
 pip install --upgrade pip
 pip install wheel
