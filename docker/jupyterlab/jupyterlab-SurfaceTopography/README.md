@@ -19,11 +19,11 @@ pip-compile requirements.in > requirements.txt
 
 Build container from parent directory (`docker/jupyterlab`) with
 
-    docker build -t imteksim/jupyterlab-SurfaceTopography -f jupyterlab-SurfaceTopography/Dockerfile .
+    docker build -t imteksim/jupyterlab-surfacetopography -f jupyterlab-SurfaceTopography/Dockerfile .
 
 or write directly to tar for transfer with
 
-    docker build --output type=tar,dest=imteksim-jupyterlab-SurfaceTopography.tar -t imteksim/jupyterlab-SurfaceTopography -f jupyterlab-SurfaceTopography/Dockerfile .
+    docker build --output type=tar,dest=imteksim-jupyterlab-SurfaceTopography.tar -t imteksim/jupyterlab-surfacetopography -f jupyterlab-SurfaceTopography/Dockerfile .
 
 and load at target destination with
 
@@ -113,7 +113,7 @@ Run public Jupyter Lab on default https port with fixed password
         -v ${WORKDIR}:/home/jovyan/work \
         -v ${FONTDIR}:/home/jovyan/.fonts \
         -v ${CERTDIR}/${HOSTNAME}:/etc/ssl/notebook \
-        imteksim/jupyterlab-SurfaceTopography \
+        imteksim/jupyterlab-surfacetopography \
         start-notebook.sh \
         --ServerApp.keyfile=/etc/ssl/notebook/${HOSTNAME}.key \
         --ServerApp.certfile=/etc/ssl/notebook/${HOSTNAME}.cer \
