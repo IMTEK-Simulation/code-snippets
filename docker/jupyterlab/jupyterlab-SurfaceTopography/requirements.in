@@ -30,3 +30,7 @@ PyYAML
 scipy
 scikit-learn
 seaborn
+git+https://github.com/IMTEK-Simulation/code-snippets.git
+pytest
+ruamel.yaml
+jupytext
