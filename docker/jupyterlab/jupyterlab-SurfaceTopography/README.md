@@ -1,5 +1,17 @@
 # Sample setup jupyterlab-SurfaceTopography
 
+## Changes to the container
+
+This docker image bases on the [Jupyter Docker Stacks](https://jupyter-docker-stacks.readthedocs.io/en/latest/).
+These base images use condato run a JupyterLab instance. Extensions to the Jupyter ecosystem (i.e. `jupytext`) 
+must hence go into the `conda-requirements.in` file. 
+
+`SurfaceTopography` does not work well within a conda environment. Instead, this image introduces a separate 
+ipython kernel `SurfaceTopography? that just uses the container-internal system Python and a few system libraries,
+i.e. `numpy`. Anything needed for production in connection with `SurfaceTopography` goes in `requirements.in` or
+into `requirements.txt` directly. When modifying `requirements.in`, regenerate `requirments.txt`with pinned versions
+as described below.
+
 ## Python requirements
 
 To (re-)generate a `requirements.txt` with fixed package versions, use
