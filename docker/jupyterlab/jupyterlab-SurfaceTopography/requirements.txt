@@ -254,8 +254,6 @@ monty==2022.9.9
     # via
     #   fireworks
     #   imteksimfw
-mpi4py==3.1.4
-    # via mufft
 mrcfile==1.4.3
     # via griddataformats
 msgpack==1.0.4
