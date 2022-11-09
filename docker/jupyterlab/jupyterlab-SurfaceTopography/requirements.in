@@ -3,6 +3,7 @@ pep517
 tomli
 ase
 asgiref
+contactmechanics
 cycler
 dtool
 dtool_lookup_api
