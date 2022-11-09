@@ -7,10 +7,18 @@ These base images use condato run a JupyterLab instance. Extensions to the Jupyt
 must hence go into the `conda-requirements.in` file. 
 
 `SurfaceTopography` does not work well within a conda environment. Instead, this image introduces a separate 
-ipython kernel `SurfaceTopography? that just uses the container-internal system Python and a few system libraries,
+ipython kernel `SurfaceTopography` that just uses the container-internal system Python and a few system libraries,
 i.e. `numpy`. Anything needed for production in connection with `SurfaceTopography` goes in `requirements.in` or
 into `requirements.txt` directly. When modifying `requirements.in`, regenerate `requirments.txt`with pinned versions
 as described below.
+
+If in need to quickly modify the `SurfaceTopography` kernel environment at runtime, pay attention to
+breaking out of the default conda enviornment in the shell
+
+* `conda deactivate`, and
+* removing any conda-related artifacts from the `$PATH`, i.e. with `export PATH=$(echo "$PATH" | sed -e 's|/opt/conda[^:]*:||g')`
+
+The latter is necessary to avoid conda compiler interfering with custom build steps when compiling against system libraries.
 
 ## Python requirements
 
