@@ -1,6 +1,7 @@
 click
 pep517
 tomli
+adhesion
 ase
 asgiref
 contactmechanics
