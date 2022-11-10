@@ -131,7 +131,7 @@ Run public Jupyter Lab on default https port with fixed password
 
     docker run -d --rm -p 443:443 \
         -v ${WORKDIR}:/home/jovyan/work \
-        -v ${FONTDIR}:/home/jovyan/.fonts \
+        -v ${FONTDIR}:/fonts \
         -v ${CERTDIR}/${HOSTNAME}:/etc/ssl/notebook \
         imteksim/jupyterlab-surfacetopography \
         start-notebook.sh \
