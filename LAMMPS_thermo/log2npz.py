@@ -57,6 +57,7 @@ def main():
                          names=True,
                          dtype=None,
                          encoding='utf-8',
+                         invalid_raise=False,
                          usemask=True) for frame in frame_lines)
 
     # Write to stdout in compressed Numpy format (binary)
