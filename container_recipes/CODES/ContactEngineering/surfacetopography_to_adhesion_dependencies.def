@@ -1,0 +1,51 @@
+Bootstrap: localimage
+From: fftw_and_io.sif
+# includes pnetcdf and python netcdf
+
+%post
+    python3 -m pip install --upgrade pip pip-tools
+    apt update
+    apt-get install -y libopenblas-dev meson ninja-build
+
+
+## env variables from openmpi
+
+   #env for runtime
+    export OMPI_DIR=/opt/ompi
+    export SINGULARITY_OMPI_DIR=$OMPI_DIR
+    export SINGULARITYENV_APPEND_PATH=$OMPI_DIR/bin
+    export SINGULAIRTYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib
+
+    # Set env variables so we can compile our application
+    export PATH=$OMPI_DIR/bin:$PATH
+    export LD_LIBRARY_PATH=$OMPI_DIR/lib:$LD_LIBRARY_PATH
+    export MANPATH=$OMPI_DIR/share/man:$MANPATH
+
+
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
+
+## for apt to be noninteractive
+export DEBIAN_FRONTEND=noninteractive
+export DEBCONF_NONINTERACTIVE_SEEN=true
+
+  
+  # Install muspectre
+
+   pip install -v --no-binary muspectre muspectre
+
+%environment
+    export LANG=C.UTF-8
+    export LC_ALL=C.UTF-8
+    #env for runtime
+    export OMPI_DIR=/opt/ompi
+    export SINGULARITY_OMPI_DIR=$OMPI_DIR
+    export SINGULARITYENV_APPEND_PATH=$OMPI_DIR/bin
+    export SINGULAIRTYENV_APPEND_LD_LIBRARY_PATH=$OMPI_DIR/lib
+
+
+%runscript
+    python3 "$@" 
+
+
+
