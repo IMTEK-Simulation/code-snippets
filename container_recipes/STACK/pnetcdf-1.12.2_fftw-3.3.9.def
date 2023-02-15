@@ -40,7 +40,7 @@ From: mpibase.sif
     python3 -m pip install --upgrade setuptools numpy scipy pytest
 
     BUILDDIR=/tmp 
-    PREFIX=/usr/local
+    PREFIX=/usr/
 
     # Manual install of MPI parallel FFTW
     rm -rf ${BUILDDIR}/fftw-${SING_FFTW_VERSION}
