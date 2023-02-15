@@ -70,7 +70,8 @@ From: mpibase.sif
     # We need to compile NetCDF ourselves because there is no package that has
     # parallel PnetCDF and HDF5 enabled.
     rm -rf ${BUILDDIR}/netcdf-c-build
-    curl https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-c-${SING_NETCDF4_VERSION}.tar.gz | tar -xzC ${BUILDDIR}
+    wget https://github.com/Unidata/netcdf-c/archive/refs/tags/v${SING_NETCDF4_VERSION}.tar.gz 
+    tar -xf v${SING_NETCDF4_VERSION}.tar.gz -C ${BUILDDIR}
     mkdir -p ${BUILDDIR}/netcdf-c-build
     cd ${BUILDDIR}/netcdf-c-build
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=${PREFIX} -DUSE_PARALLEL=ON -DENABLE_PARALLEL4=ON -DENABLE_PNETCDF=ON -DENABLE_TESTS=OFF ${BUILDDIR}/netcdf-c-${SING_NETCDF4_VERSION}
@@ -79,7 +80,7 @@ From: mpibase.sif
 
     # Install netcdf4-python and make sure that it is compiled (no-binary),
     # otherwise it will not have parallel support.
-    NETCDF4_DIR=${PREFIX} HDF5_DIR=${PREFIX} python3 -m pip install --no-binary netCDF4 netCDF4==${SING_NETCDF4_PYTHON_VERSION}
+    NETCDF4_DIR=${PREFIX} HDF5_DIR=${PREFIX} python3 -m pip install --use-pep517 --no-binary netCDF4 netCDF4==${SING_NETCDF4_PYTHON_VERSION}
 
 %runscript
 
