@@ -45,18 +45,18 @@ def render(args):
 
     lj = structure_factor_2d_grid.domain[0, 0]
     lk = structure_factor_2d_grid.domain[1, 1]
-    nj, nk, _ = structure_factor_2d_grid.shape
+    nk, nj, _ = structure_factor_2d_grid.shape
 
-    qj = np.linspace(0, lj, nj, endpoint=True)
-    qk = np.linspace(0, lk, nk, endpoint=True)
+    qj = np.linspace(lj/nj, lj, nj, endpoint=True)
+    qk = np.linspace(lk/nk, lk, nk, endpoint=True)
 
+    print(f"qj, qk shape: {qj.shape}, {qk.shape}")
     Qj, Qk = np.meshgrid(qj, qk)
+    print(f"Qj, Qk shape: {Qj.shape}, {Qk.shape}")
 
     # Reshape the flat stucture factor into mesh
-    Sjk = structure_factor_2d_grid['Structure Factor 2D'].array.reshape(nj, nk)
-    print(Sjk.shape)
-    print(np.max(Sjk))
-    print(np.min(Sjk))
+    Sjk = structure_factor_2d_grid['Structure Factor 2D'].array.reshape((nk, nj), order='F')
+    print(f"Sjk shape: {Sjk.shape}")
 
     # Compute plot size in inches (DPI determines label size)
     dpi = 300
@@ -75,7 +75,6 @@ def render(args):
                                         vmin=Sjk.min(), vmax=Sjk.max(), base=10)
 
     im = ax.pcolormesh(Qj, Qk, Sjk, norm=norm, **shadeopts)
-    ax.set_aspect('equal', 'box')
     ax.set_xlabel(r"qj (1/Ang)")
     ax.set_ylabel("qk (1/Ang)")
     plt.tight_layout()

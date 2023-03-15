@@ -61,8 +61,8 @@ def compute_structure_factor_2d(rxy, Lx, Ly, nj=10, nk=10, stepj=1, stepk=1):
 
     print(f"Lx, Ly: {Lx, Ly}")
 
-    qj = 2. * np.pi / Lx * np.arange(1, nj + 1, stepj)
-    qk = 2. * np.pi / Ly * np.arange(1, nk + 1, stepk)
+    qj = 2. * np.pi / Lx * np.arange(1, nj+1, stepj)
+    qk = 2. * np.pi / Ly * np.arange(1, nk+1, stepk)
     print(f"qj shape: {qj.shape}")
     print(f"qk shape: {qk.shape}")
 
@@ -85,7 +85,7 @@ def compute_structure_factor_2d(rxy, Lx, Ly, nj=10, nk=10, stepj=1, stepk=1):
     rho = np.sum(np.exp(-1.j * Ql_dot_rxy), axis=0)
     Sl = np.abs(rho * np.conj(rho)) / N
     print(f"Sl shape: {Sl.shape}")
-    Sjk = Sl.reshape(dimj, dimk)
+    Sjk = Sl.reshape(dimk, dimj)
     print(f"Sjk shape: {Sjk.shape}")
 
     return Qj, Qk, Sjk
@@ -118,10 +118,12 @@ def modify(frame, data):
     rxy = data.particles['Position'][index_selection, :2]
     print(f"rxy shape: {rxy.shape}")
 
-    nj = 250
-    nk = 250
+    nj = 200
+    nk = 55
+    stepj=1
+    stepk=1
 
-    Qj, Qk, Sjk = compute_structure_factor_2d(rxy, Lx, Ly, nj=nj, nk=nk, stepj=10, stepk=10)
+    Qj, Qk, Sjk = compute_structure_factor_2d(rxy, Lx, Ly, nj=nj, nk=nk, stepj=stepj, stepk=stepk)
 
     # structure factor data stored on a voxel grid following sample on
     # https://www.ovito.org/docs/3.8.0/reference/pipelines/data_objects/voxel_grid.html#scene-objects-voxel-grid
