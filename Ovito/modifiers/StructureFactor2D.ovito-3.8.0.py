@@ -22,21 +22,7 @@
 # SOFTWARE.
 """
 Computes structure factor Sjk in qj, qk plane from x, y coordinates of all
-selected atoms and stores them in tables
-
-   CenterOfMass.[X|Y|Z]
-
-and
-
-   CenterOfMassVelocity.[X|Y|Z]
-
-Values previously stored in these attributes are moved to
-
-   OriginalCenterOfMass.[X|Y|Z]
-
-and
-
-   OriginalCenterOfMassVelocity.[X|Y|Z]
+selected atoms and stores them in a voxel grid 'structure-factor-2d'.
 """
 
 from ovito.data import *
@@ -44,8 +30,18 @@ from ovito.vis import *
 import numpy as np
 
 
-def compute_structure_factor_2d(rxy, Lx, Ly, nj=100, nk=100):
-    """Compute 2d structure factor from coordinates in rxy.
+def compute_structure_factor_2d(rxy, Lx, Ly, nj=10, nk=10, stepj=1, stepk=1):
+    """Compute 2d structure factor
+
+        S(k) = N^-1 <rho(k) rho(-k)>
+
+    with
+
+        rho(k) = sum_i=1^N exp(-i k*r_i)
+
+    the Fourier transform of the number density according to Section 2.6. in
+        M. P. Allen and D. J. Tildesley, Computer simulation of liquids,
+        Second edition. Oxford, United Kingdom: Oxford University Press, 2017.
 
     Parameters
     ----------
@@ -54,37 +50,45 @@ def compute_structure_factor_2d(rxy, Lx, Ly, nj=100, nk=100):
     Lx: float
     Ly: float
         xy plane dimension
+    nj: int
+    nk: int
+        qkj plane dimensions in integer multiples of 2*pi/Lx,y
+    stepj: int
+    stepk: int
+        step size, increase above 1 to omit wave vectors and accelerate computation
     """
     N = rxy.shape[0]
 
     print(f"Lx, Ly: {Lx, Ly}")
 
-    x = np.linspace(0, Lx / 2, nj, endpoint=True)
-    y = np.linspace(0, Ly / 2, nk, endpoint=True)
+    qj = 2. * np.pi / Lx * np.arange(1, nj + 1, stepj)
+    qk = 2. * np.pi / Ly * np.arange(1, nk + 1, stepk)
+    print(f"qj shape: {qj.shape}")
+    print(f"qk shape: {qk.shape}")
 
-    qjk = np.array([2. * np.pi * x / Lx, 2. * np.pi * y / Ly]).T
-
-    Qj, Qk = np.meshgrid(qjk[:, 0], qjk[:, 1])
-    print(f"qjk shape: {qjk.shape}")
+    Qj, Qk = np.meshgrid(qj, qk)
     print(f"Qj, Qk shape: {Qj.shape}, {Qk.shape}")
 
     Qjk = np.array([Qj, Qk])
     print(f"Qjk shape: {Qjk.shape}")
-    Ql = Qjk.reshape(2, nj * nk)
+
+    dimj = qj.shape[0]
+    dimk = qk.shape[0]
+    diml = dimj * dimk
+
+    Ql = Qjk.reshape(2, diml)
     print(f"Ql shape: {Ql.shape}")
 
     Ql_dot_rxy = np.dot(rxy, Ql)
     print(f"Ql.rxy shape: {Ql_dot_rxy.shape}")
 
-    Sl = np.square(np.abs(np.sum(np.exp(1.j * Ql_dot_rxy), axis=0))) / N
+    rho = np.sum(np.exp(-1.j * Ql_dot_rxy), axis=0)
+    Sl = np.abs(rho * np.conj(rho)) / N
     print(f"Sl shape: {Sl.shape}")
-    Sjk = Sl.reshape(nj, nk)
+    Sjk = Sl.reshape(dimj, dimk)
     print(f"Sjk shape: {Sjk.shape}")
 
-    table = np.array([Qj.reshape(nj * nk), Qk.reshape(nj * nk), Sjk.reshape(nj * nk)]).T
-    print(f"qj, qk, Sjk table shape: {table.shape}")
-
-    return table
+    return Qj, Qk, Sjk
 
 
 def modify(frame, data):
@@ -114,16 +118,13 @@ def modify(frame, data):
     rxy = data.particles['Position'][index_selection, :2]
     print(f"rxy shape: {rxy.shape}")
 
-    nj = 100
-    nk = 100
+    nj = 250
+    nk = 250
 
-    qj, qk, sjk = np.split(compute_structure_factor_2d(rxy, Lx, Ly, nj=nj, nk=nk), 3, 1)
+    Qj, Qk, Sjk = compute_structure_factor_2d(rxy, Lx, Ly, nj=nj, nk=nk, stepj=10, stepk=10)
 
-    Sjk = sjk.reshape(nj, nk)
-    # table = DataTable(identifier='structure-factord-2d', title='Structure factor Sjk', plot_mode=DataTable.PlotMode.NoPlot)
-    # table.x = table.create_property('wave vector qj', data=Qj.flatten())
-    # table.y = table.create_property('wave vector qk', data=Qk.flatten())
-    # table.z = table.create_property('structure factor Sjk', data=Sjk.flatten())
+    # structure factor data stored on a voxel grid following sample on
+    # https://www.ovito.org/docs/3.8.0/reference/pipelines/data_objects/voxel_grid.html#scene-objects-voxel-grid
 
     # Starting with an empty DataCollection:
     dummy_data = DataCollection()
@@ -133,7 +134,7 @@ def modify(frame, data):
     dummy_data.cell = SimulationCell(pbc=(True, True, False),
                                      vis=SimulationCellVis(line_width=0.03),
                                      is2D=True)
-    dummy_data.cell_[:, :3] = [[np.pi, 0, 0], [0, np.pi, 0], [0, 0, 1]]
+    dummy_data.cell_[:, :3] = 2 * np.pi * np.array([[nj / Lx, 0, 0], [0, nk / Ly, 0], [0, 0, 0]])
 
     # Create the VoxelGrid object and give it a unique identifier by which it can be referred to later on.
     # Link the voxel grid to the SimulationCell object created above, which defines its spatial extensions.
@@ -142,7 +143,7 @@ def modify(frame, data):
     grid = VoxelGrid(
         identifier='structure-factor-2d',
         domain=dummy_data.cell,
-        shape=(*Sjk.shape,1),
+        shape=(*Sjk.shape, 1),
         grid_type=VoxelGrid.GridType.CellData,
         vis=VoxelGridVis(enabled=True, transparency=0.6))
 
@@ -154,5 +155,3 @@ def modify(frame, data):
 
     # Insert the VoxelGrid object into the DataCollection.
     data.objects.append(grid)
-
-
