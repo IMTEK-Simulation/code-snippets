@@ -61,8 +61,8 @@ def compute_structure_factor_2d(rxy, Lx, Ly, nj=10, nk=10, stepj=1, stepk=1):
 
     print(f"Lx, Ly: {Lx, Ly}")
 
-    qj = 2. * np.pi / Lx * np.arange(1, nj+1, stepj)
-    qk = 2. * np.pi / Ly * np.arange(1, nk+1, stepk)
+    qj = 2. * np.pi / Lx * np.arange(0, nj, stepj)
+    qk = 2. * np.pi / Ly * np.arange(0, nk, stepk)
     print(f"qj shape: {qj.shape}")
     print(f"qk shape: {qk.shape}")
 
@@ -118,8 +118,8 @@ def modify(frame, data):
     rxy = data.particles['Position'][index_selection, :2]
     print(f"rxy shape: {rxy.shape}")
 
-    nj = 200
-    nk = 55
+    nj = 150
+    nk = 150
     stepj=1
     stepk=1
 

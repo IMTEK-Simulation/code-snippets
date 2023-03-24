@@ -47,8 +47,8 @@ def render(args):
     lk = structure_factor_2d_grid.domain[1, 1]
     nk, nj, _ = structure_factor_2d_grid.shape
 
-    qj = np.linspace(lj/nj, lj, nj, endpoint=True)
-    qk = np.linspace(lk/nk, lk, nk, endpoint=True)
+    qj = np.linspace(0, lj, nj)
+    qk = np.linspace(0, lk, nk)
 
     print(f"qj, qk shape: {qj.shape}, {qk.shape}")
     Qj, Qk = np.meshgrid(qj, qk)
