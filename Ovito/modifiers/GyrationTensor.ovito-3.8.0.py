@@ -182,7 +182,7 @@ class GyrationTensor(ModifierInterface):
         for i, (principal_axis_label, principal_moment_label) in enumerate(
                 zip(PRINCIPAL_AXIS_LABELS, PRINCIPAL_MOMENT_LABELS)):
             data.particles_.create_property(principal_axis_label, data=principal_axes[:, :, i]).vis = \
-            vector_vis_principal_axes[i]
+                vector_vis_principal_axes[i]
             data.particles_.create_property(principal_moment_label, data=principal_momenta[:, i])
 
         type_prop = data.particles['Particle Type']
@@ -195,14 +195,22 @@ class GyrationTensor(ModifierInterface):
 
         type_prop.types.append(com_particle_type)
         data.particles_['Particle Type'][com_particle_ids] = com_particle_type_id
+        data.particles_['Particle Identifier'][com_particle_ids] = com_particle_ids
 
         # Display center of mass as ellipsoids
         # https://www.ovito.org/manual/advanced_topics/aspherical_particles.html#ellipsoids
 
         # derive quaternion from principal axes of gyration tensor
+        # https://www.ovito.org/forum/topic/quaternion-representation-of-aspherical-particels
         orientation = np.zeros((n_particles, 4))
-        orientation[com_particle_ids, :] = [Rotation.from_matrix(rot_mat).as_quat() for rot_mat in
-                                            principal_axes[com_particle_ids]]
+
+        # orientation[com_particle_ids, :] = [Rotation.from_matrix(rot_mat).as_quat() for rot_mat in
+        #                                    principal_axes[com_particle_ids]]
+        # Attention: reference orientation for aspherical particles is along z axis
+        # https://www.ovito.org/forum/topic/quaternion-representation-of-aspherical-particels/
+        orientation[com_particle_ids, :] = [
+            [*np.cross([0, 0, 1], rot_mat[:, -1]), 1 + np.dot([0, 0, 1], rot_mat[:, -1])] for rot_mat in
+            principal_axes[com_particle_ids]]
 
         print(principal_axes[-1, :])
         print(orientation[-1, :])
