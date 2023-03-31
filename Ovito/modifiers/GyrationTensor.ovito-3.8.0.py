@@ -28,13 +28,11 @@ selected atoms and stores them in a voxel grid 'structure-factor-2d'.
 from ovito.data import *
 from ovito.vis import *
 import numpy as np
-from scipy.spatial.transform import Rotation
 
 from ovito.data import DataCollection
 from ovito.pipeline import ModifierInterface, FileSource
 from ovito.traits import OvitoObjectTrait
 from ovito.vis import VectorVis, ParticlesVis
-from traits.api import Int, Bool
 
 PRINCIPAL_AXIS_LABELS = ["1st Principal Axis", "2nd Principal Axis", "3rd Principal Axis"]
 PRINCIPAL_MOMENT_LABELS = ["1st Principal Moment", "2nd Principal Moment", "3rd Principal Moment"]
@@ -42,9 +40,9 @@ PRINCIPAL_MOMENT_LABELS = ["1st Principal Moment", "2nd Principal Moment", "3rd 
 
 class GyrationTensor(ModifierInterface):
     """
-    Visualize gyration tensor.
+    Visualize gyration tensor and compute secondary properties.
 
-    The ClusterAnalysis modifier may compute the gyration tensor.
+    Needs to follow a ClusterAnalysis modifier that computes the gyration tensor and center of masses.
 
     This modifier transforms the center of mass and gyration tensor into pseudo particles and vectors for display.
 
@@ -79,7 +77,8 @@ class GyrationTensor(ModifierInterface):
 
     def modify(self, data: DataCollection, **kwargs):
         """
-        This modifier computes the 2d structure factor from positions of all selected particles in the xy plane.
+        This modifier visualizes COM and gyration tensors of clusters.
+
 
         Parameters
         ----------
@@ -102,66 +101,29 @@ class GyrationTensor(ModifierInterface):
 
         index_selection = np.nonzero(selection)[0]
         print(f"Index selection shape: {index_selection.shape}")
-        positions = data.particles['Position'][index_selection]
-        masses = data.particles['Mass'][index_selection]
 
-        # if center of masses and radii of gyration computed already, then use those, otherwise compute here
-        if 'Cluster' in data.particles:
-            cluster_table = data.tables["clusters"]
+        # Extract data from previously run CluserAnalysis modifiers
+        cluster_table = data.tables["clusters"]
 
-            unique_cluster_ids = cluster_table['Cluster Identifier']
-            print(f"unique_cluster_ids shape: {unique_cluster_ids.shape}")
+        unique_cluster_ids = cluster_table['Cluster Identifier']
+        print(f"unique_cluster_ids shape: {unique_cluster_ids.shape}")
 
-            coms = cluster_table['Center of Mass']
-
-            gyr_tensors = cluster_table['Gyration Tensor']
-        else:
-            molecule_ids = data.particles['Molecule Identifier'][index_selection]
-            print(f"molecule_ids shape: {molecule_ids.shape}")
-            unique_molecule_ids = np.unique(molecule_ids)
-            unique_cluster_ids = np.arange(1, len(unique_molecule_ids) + 1)
-
-            print(f"unique_molecule_ids shape: {unique_molecule_ids.shape}")
-            print(f"unique_cluster_ids shape: {unique_cluster_ids.shape}")
-
-            coms = np.array([(
-                    np.sum(
-                        masses[molecule_ids == molecule_id]
-                        * positions[molecule_ids == molecule_id].T, axis=1)
-                    / np.sum(masses[molecule_ids == molecule_id]))
-                for molecule_id in unique_molecule_ids])
-
-            print(f"coms shape: {coms.shape}")
-
-            per_particle_molecular_coms = np.zeros(positions.shape)
-            cluster_ids = np.zeros(molecule_ids.shape)
-            print(f"per_particle_molecular_coms shape: {per_particle_molecular_coms.shape}")
-            print(f"cluster_ids shape: {cluster_ids.shape}")
-
-            for com, molecule_id, cluster_id in zip(coms, unique_molecule_ids, unique_cluster_ids):
-                per_particle_molecular_coms[molecule_ids == molecule_id] = com
-                cluster_ids[molecule_ids == molecule_id] = cluster_id
-
-            property_coms = data.particles_.create_property("Molecular Center of Mass", dtype=float, components=3)
-            property_coms[index_selection] = per_particle_molecular_coms
-
-            data.particles_.create_property("Cluster")
-            data.particles_["Cluster"][index_selection] = cluster_ids
+        coms = cluster_table['Center of Mass']
+        gyr_tensors = cluster_table['Gyration Tensor']
 
         com_particle_ids = np.array([data.particles_.add_particle(com) for com in coms], dtype=int)
 
         data.particles_['Cluster'][com_particle_ids] = unique_cluster_ids
 
         print(f"gyr_tensors shape: {gyr_tensors.shape}")
-        # tensor: vector of 6 components [XX, YY, ZZ, XY, XZ, YZ].
 
         n_particles = data.particles['Position'].shape[0]
         print(f"n_particles: {n_particles}")
-        # [n_particles, n_axes, n_dim]
         principal_axes = np.zeros((n_particles, 3, 3))
         principal_momenta = np.zeros((n_particles, 3))
         tilt = np.zeros((n_particles, 3))
 
+        # tensor: vector of 6 components [XX, YY, ZZ, XY, XZ, YZ].
         for com_particle_id, gyr_tensor_vector in zip(com_particle_ids, gyr_tensors):
             xx, yy, zz, xy, xz, yz = gyr_tensor_vector
             gyr_tensor_matrix = np.array([[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]])
@@ -173,8 +135,8 @@ class GyrationTensor(ModifierInterface):
                 principal_axes[com_particle_id, :, i] = eigenvectors[:, i]
                 principal_momenta[com_particle_id, i] = eigenvalues[i]
 
-                # tilt of 3rd principal axis with x,y, or z axis
-                tilt[com_particle_id, i] = np.arccos(principal_axes[com_particle_id, -1, i])
+                # tilt angle cosne of 3rd principal axis with x,y, or z axis
+                tilt[com_particle_id, i] = principal_axes[com_particle_id, -1, i]
 
         print(f"principal_axes shape: {principal_axes.shape}")
         print(f"principal_momenta shape: {principal_momenta.shape}")
@@ -185,6 +147,7 @@ class GyrationTensor(ModifierInterface):
                 vector_vis_principal_axes[i]
             data.particles_.create_property(principal_moment_label, data=principal_momenta[:, i])
 
+        # Create new particle type for pseudo COM particles
         type_prop = data.particles['Particle Type']
         type_name_dict = {pt.id: pt.name for pt in type_prop.types}
         print(f"Current particle types: {type_name_dict}")
@@ -203,24 +166,16 @@ class GyrationTensor(ModifierInterface):
         # derive quaternion from principal axes of gyration tensor
         # https://www.ovito.org/forum/topic/quaternion-representation-of-aspherical-particels
         orientation = np.zeros((n_particles, 4))
-
-        # orientation[com_particle_ids, :] = [Rotation.from_matrix(rot_mat).as_quat() for rot_mat in
-        #                                    principal_axes[com_particle_ids]]
         # Attention: reference orientation for aspherical particles is along z axis
         # https://www.ovito.org/forum/topic/quaternion-representation-of-aspherical-particels/
         orientation[com_particle_ids, :] = [
             [*np.cross([0, 0, 1], rot_mat[:, -1]), 1 + np.dot([0, 0, 1], rot_mat[:, -1])] for rot_mat in
             principal_axes[com_particle_ids]]
 
-        print(principal_axes[-1, :])
-        print(orientation[-1, :])
-
         data.particles_.create_property("Aspherical Shape")
         data.particles_.create_property("Orientation")
         data.particles_['Aspherical Shape'][com_particle_ids] = np.sqrt(principal_momenta[com_particle_ids, :])
         data.particles_['Orientation'][com_particle_ids] = orientation[com_particle_ids, :]
 
-        # Tilt (3rd principaö axis with z vec)
-
-        data.particles_.create_property("Tilt", data=tilt)
-
+        # tilt cosine (of angle between 3rd principal axis with x, y, and z unit vectors)
+        data.particles_.create_property("Tilt Cosine", data=tilt)
